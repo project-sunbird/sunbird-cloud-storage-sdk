@@ -12,7 +12,7 @@ trait IStorageService {
      * @param objectKey String - The destination key/path to upload the file to. If the path exists it will be overwritten.
      * @param isPublic Option[Boolean] - Whether the file should have public read access? Optional and defaults to false.
      * @param isDirectory Option[Boolean] - Whether the file is a directory and need to upload folder recursively?
-     * @param ttl Option[String] - The ttl/expiry for the file. Optional and default is never expires 
+     * @param ttl Option[Int] - The ttl/expiry for the file. Optional and default is never expires
      * @param retryCount Option[Int] - Number of times the upload will be retried before failing. Defaults to global configuration "max.retries"
      * 
      * @return String - The url of the file/folder uploaded
@@ -24,11 +24,11 @@ trait IStorageService {
      * Put a blob in the cloud with the given content data. The difference between this and <code>upload()</code> method is that this method takes in byte array and sets is payload for the object.
      * 
      * @param container String - The container/bucket to upload the file to.
-     * @param file String - The file path.
+     * @param content String - The byte array of an object.
      * @param objectKey String - The destination key/path to upload the file to. If the path exists it will be overwritten.
      * @param isPublic Option[Boolean] - Whether the file should have public read access? Optional and defaults to false.
      * @param isDirectory Option[Boolean] - Whether the file is a directory and need to upload folder recursively? Optional and defaults to false.
-     * @param ttl Option[String] - The ttl/expiry for the file. Optional and default is never expires 
+     * @param ttl Option[Int] - The ttl/expiry for the file. Optional and default is never expires
      * @param retryCount Option[Int] - Number of times the upload will be retried before failing. Defaults to "max.retries" defined in global configuration 
      * 
      * @return String - The url of the file/folder uploaded
@@ -41,7 +41,7 @@ trait IStorageService {
      * 
      * @param container String - The container/bucket of the file
      * @param objectKey String - The key/path of the file to pre-sign
-     * @param ttl Option[String] - The ttl/expiry for the pre-signed URL. Defaults to "max.signedurl.ttl" defined in global configuration
+     * @param ttl Option[Int] - The ttl/expiry for the pre-signed URL. Defaults to "max.signedurl.ttl" defined in global configuration
      *  
      * @return String - The pre-signed url
      */
@@ -93,7 +93,7 @@ trait IStorageService {
      * @param objectKey String - The blob object archive file
      * @param toKey String - The destination folder on the bucket/container to extract to.
      */
-    def extractArchive(container: String, objectKey: String, toKey: String): String
+    def extractArchive(container: String, objectKey: String, toKey: String)
 
     /**
      * Get the blob object details
@@ -121,11 +121,11 @@ trait IStorageService {
      * List object keys from cloud storage for a given prefix. Similar to <code>listObjects()</code>
      * 
      * @param container String - The container/bucket
-     * @param prefix String - The object prefix to list objects. The prefix can be folder or pattern.
+     * @param _prefix String - The object prefix to list objects. The prefix can be folder or pattern.
      * 
      * @return List[Blob] - The blob objects for the given prefix.
      */
-    def listObjectKeys(container: String, prefix: String): List[String]
+    def listObjectKeys(container: String, _prefix: String): List[String]
 
     /**
      * Search for objects for a given prefix and return only keys. Specifically used for telemetry files as the files are prefixed by sync date. 
@@ -140,7 +140,7 @@ trait IStorageService {
      * @param delta Option[Int] - The delta to search from given a from date or to date. Optional. If delta is provided and both fromDate and toDate are empty, the toDate will be defaulted to current date
      * @param pattern String - The date pattern of from and to date. Defaulst to "yyyy-MM-dd"
      * 
-     * @return List[String] - The object keys
+     * @return List[Blob] - The object keys
      */
     def searchObjects(container: String, prefix: String, fromDate: Option[String] = None, toDate: Option[String] = None, delta: Option[Int] = None, 
             pattern: String = "yyyy-MM-dd"): List[Blob]
