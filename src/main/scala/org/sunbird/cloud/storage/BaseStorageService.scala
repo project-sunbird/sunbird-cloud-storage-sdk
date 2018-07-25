@@ -4,10 +4,13 @@ import org.jclouds.blobstore._
 import org.jclouds.blobstore.util._
 import com.google.common.io._
 import java.io._
+
 import org.jclouds.blobstore.domain._
 import org.apache.commons.io.FilenameUtils
+import org.apache.commons.lang3.StringUtils
 import org.sunbird.cloud.storage.exception.StorageServiceException
 import org.sunbird.cloud.storage.util.CommonUtil
+
 import collection.JavaConverters._
 import org.jclouds.blobstore.options.ListContainerOptions.Builder.{prefix, _}
 import org.sunbird.cloud.storage.Model.Blob
@@ -89,8 +92,12 @@ trait BaseStorageService extends IStorageService {
         }
     }
 
-    override def getSignedURL(container: String, objectKey: String, ttl: Option[Int] = None): String = {
-        context.getSigner.signGetBlob(container, objectKey, ttl.getOrElse(maxSignedurlTTL)).getEndpoint.toString
+    override def getSignedURL(container: String, objectKey: String, ttl: Option[Int] = None, permission: String = "r"): String = {
+        if (StringUtils.equalsIgnoreCase("w", permission)) {
+            context.getSigner.signPutBlob(container, blobStore.blobBuilder(objectKey).build(), 600l).getEndpoint.toString
+        } else {
+            context.getSigner.signGetBlob(container, objectKey, ttl.getOrElse(maxSignedurlTTL)).getEndpoint.toString
+        }
     }
 
     override def download(container: String, objectKey: String, localPath: String, isDirectory: Option[Boolean] = Option(false)) = {
