@@ -12,6 +12,7 @@ import collection.JavaConverters._
 import org.jclouds.blobstore.options.ListContainerOptions.Builder.{prefix, _}
 import org.sunbird.cloud.storage.Model.Blob
 import org.jclouds.blobstore.options.CopyOptions
+import org.sunbird.cloud.storage.conf.AppConf
 
 trait BaseStorageService extends IStorageService {
 
@@ -19,7 +20,6 @@ trait BaseStorageService extends IStorageService {
     var blobStore: BlobStore
     var maxRetries: Int = 1
     var maxSignedurlTTL: Int = 604800
-    val tempPath = "src/test/resources/test-azure"
     var attempt = 0
 
     override def upload(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), isDirectory: Option[Boolean] = Option(false), ttl: Option[Int] = None, retryCount: Option[Int] = None): String = {
@@ -200,9 +200,10 @@ trait BaseStorageService extends IStorageService {
 
     override def extractArchive(container: String, objectKey: String, toKey: String): Unit = {
         try {
-            download(container, objectKey, tempPath, Option(false))
-            val localFolder = tempPath + "/" + toKey.split("/").last
-            CommonUtil.unZip(tempPath + "/" + objectKey.split("/").last, localFolder)
+            val localPath = AppConf.getConfig("local_extract_path")
+            download(container, objectKey, localPath, Option(false))
+            val localFolder = localPath + "/" + toKey.split("/").last
+            CommonUtil.unZip(localPath + "/" + objectKey.split("/").last, localFolder)
             upload(container, localFolder, toKey, None, Option(true))
         }
         catch {
