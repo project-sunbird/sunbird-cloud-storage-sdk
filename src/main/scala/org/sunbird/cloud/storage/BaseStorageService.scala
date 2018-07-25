@@ -4,13 +4,11 @@ import org.jclouds.blobstore._
 import org.jclouds.blobstore.util._
 import com.google.common.io._
 import java.io._
-
 import org.jclouds.blobstore.domain._
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.lang3.StringUtils
 import org.sunbird.cloud.storage.exception.StorageServiceException
-import org.sunbird.cloud.storage.util.CommonUtil
-
+import org.sunbird.cloud.storage.util.{CommonUtil, JSONUtils}
 import collection.JavaConverters._
 import org.jclouds.blobstore.options.ListContainerOptions.Builder.{prefix, _}
 import org.sunbird.cloud.storage.Model.Blob
@@ -150,10 +148,11 @@ trait BaseStorageService extends IStorageService {
 
     override def getObject(container: String, objectKey: String, withPayload: Option[Boolean] = Option(false)): Blob = {
         try {
-            val objData = blobStore.getBlob(container, objectKey).getMetadata
-            //val metaData = objData.asInstanceOf[Map[String, AnyRef]]
-            val payload = if(withPayload.get) Option(Array[Byte]()) else None
-            Blob(objectKey, objData.getContentMetadata.getContentLength, objData.getLastModified, Map[String, AnyRef](), payload)
+            val blob = blobStore.getBlob(container, objectKey)
+            val objData = blob.getMetadata
+            val metaData = JSONUtils.deserialize[Map[String, AnyRef]](JSONUtils.serialize(objData))
+            val payload = if(withPayload.get) Option(blob.getPayload.getContentMetadata.getContentMD5AsHashCode.asBytes()) else None
+            Blob(objectKey, objData.getContentMetadata.getContentLength, objData.getLastModified, metaData, payload)
         } catch {
             case e: Exception =>
                 throw new StorageServiceException(e.getMessage)
