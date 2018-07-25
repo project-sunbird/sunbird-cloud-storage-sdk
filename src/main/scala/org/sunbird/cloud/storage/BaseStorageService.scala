@@ -92,8 +92,8 @@ trait BaseStorageService extends IStorageService {
         }
     }
 
-    override def getSignedURL(container: String, objectKey: String, ttl: Option[Int] = None, permission: String = "r"): String = {
-        if (StringUtils.equalsIgnoreCase("w", permission)) {
+    override def getSignedURL(container: String, objectKey: String, ttl: Option[Int] = None, permission: Option[String] = Option("r")): String = {
+        if (permission.getOrElse("").equalsIgnoreCase("w")) {
             context.getSigner.signPutBlob(container, blobStore.blobBuilder(objectKey).build(), 600l).getEndpoint.toString
         } else {
             context.getSigner.signGetBlob(container, objectKey, ttl.getOrElse(maxSignedurlTTL)).getEndpoint.toString
