@@ -190,8 +190,18 @@ trait BaseStorageService extends IStorageService {
     }
 
     override def searchObjectkeys(container: String, prefix: String, fromDate: Option[String] = None, toDate: Option[String] = None, delta: Option[Int] = None, pattern: String = "yyyy-MM-dd"): List[String] = {
-        val objectList = searchObjects(container, prefix, fromDate, toDate, delta, pattern)
-        getPaths(container, objectList);
+//        val objectList = searchObjects(container, prefix, fromDate, toDate, delta, pattern)
+//        getPaths(container, objectList);
+        val from = if (delta.nonEmpty) CommonUtil.getStartDate(toDate, delta.get) else fromDate;
+        if (from.nonEmpty) {
+            val dates = CommonUtil.getDatesBetween(from.get, toDate, pattern);
+            val paths = for (date <- dates) yield {
+                listObjectKeys(container, prefix + date)
+            }
+            paths.flatMap { x => x.map { x => x } }.toList;
+        } else {
+            listObjectKeys(container, prefix)
+        }
     }
 
     override def copyObjects(fromContainer: String, fromKey: String, toContainer: String, toKey: String, isDirectory: Option[Boolean] = Option(false)): Unit = {
