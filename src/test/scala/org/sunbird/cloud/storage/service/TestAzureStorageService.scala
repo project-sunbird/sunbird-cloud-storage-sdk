@@ -5,7 +5,7 @@ import org.sunbird.cloud.storage.factory.StorageServiceFactory
 import org.scalatest._
 import org.sunbird.cloud.storage.conf.AppConf
 
-class TestAzureStorageService extends FlatSpec {
+class TestAzureStorageService extends FlatSpec with Matchers {
 
     it should "test for azure storage" in {
 
@@ -27,12 +27,15 @@ class TestAzureStorageService extends FlatSpec {
 
         println("upload public url", azureService.upload("test-container", "src/test/resources/test-data.log", "testUpload/test-data-public.log", Option(true)))
         println("upload public with expiry url", azureService.upload("test-container", "src/test/resources/test-data.log", "testUpload/test-data-with-expiry.log", Option(true), Option(false), Option(600)))
-        //        println("signed path to upload from external client", azureService.getSignedURLToUploadObject("test-container", "src/test/resources/test-data.log", "testUpload/test-data-public1.log"))
+        println("signed path to upload from external client", azureService.getSignedURL("test-container", "testUpload/test-data-public1.log", Option(600), Option("w")))
 
         val keys = azureService.searchObjectkeys("test-container", "testUpload/1234/")
         keys.foreach(f => println(f))
         val blobs = azureService.searchObjects("test-container", "testUpload/1234/")
         blobs.foreach(f => println(f))
+
+        val objData = azureService.getObjectData("test-container", "testUpload/test-blob.log")
+        objData.length should be(18)
 
         // delete directory
         azureService.deleteObject("test-container", "testUpload/1234/", Option(true))

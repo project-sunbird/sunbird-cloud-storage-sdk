@@ -172,4 +172,14 @@ trait IStorageService {
      */
     def getPaths(container: String, objects: List[Blob]): List[String]
 
+    /**
+      * Get the blob object data.
+      *
+      * @param container String - The container/bucket of the file
+      * @param objectKey String - The key/path of the blob object
+      *
+      * @return Array[String] - object data
+      */
+    def getObjectData(container: String, objectKey: String): Array[String]
+
 }

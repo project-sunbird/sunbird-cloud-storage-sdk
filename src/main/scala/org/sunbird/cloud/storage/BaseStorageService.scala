@@ -22,6 +22,7 @@ trait BaseStorageService extends IStorageService {
     var maxRetries: Int = 1
     var maxSignedurlTTL: Int = 604800
     var attempt = 0
+    var maxContentLength = 0
 
     override def upload(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), isDirectory: Option[Boolean] = Option(false), ttl: Option[Int] = None, retryCount: Option[Int] = None): String = {
 
@@ -92,7 +93,7 @@ trait BaseStorageService extends IStorageService {
 
     override def getSignedURL(container: String, objectKey: String, ttl: Option[Int] = None, permission: Option[String] = Option("r")): String = {
         if (permission.getOrElse("").equalsIgnoreCase("w")) {
-            context.getSigner.signPutBlob(container, blobStore.blobBuilder(objectKey).build(), 600l).getEndpoint.toString
+            context.getSigner.signPutBlob(container, blobStore.blobBuilder(objectKey).forSigning().contentLength(maxContentLength).build(), 600l).getEndpoint.toString
         } else {
             context.getSigner.signGetBlob(container, objectKey, ttl.getOrElse(maxSignedurlTTL)).getEndpoint.toString
         }
@@ -223,6 +224,17 @@ trait BaseStorageService extends IStorageService {
             upload(container, localFolder, toKey, None, Option(true))
         }
         catch {
+            case e: Exception =>
+                throw new StorageServiceException(e.getMessage)
+        }
+    }
+
+    override def getObjectData(container: String, objectKey: String): Array[String] = {
+
+        try {
+            val inStream = blobStore.getBlob(container, objectKey).getPayload.openStream()
+            scala.io.Source.fromInputStream(inStream).getLines().toArray
+        } catch {
             case e: Exception =>
                 throw new StorageServiceException(e.getMessage)
         }
