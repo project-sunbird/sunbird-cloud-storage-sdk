@@ -33,13 +33,13 @@ object AppConf {
 
     def getStorageKey(`type`: String): String = {
         if (`type`.equals("s3")) getConfig("aws_key");
-        else if (`type`.equals("azure")) getConfig("AZURE_STORAGE_ACCOUNT");
+        else if (`type`.equals("azure")) getConfig("azure_storage_key");
         else "";
     }
 
     def getStorageSecret(`type`: String): String = {
         if (`type`.equals("s3")) getConfig("aws_secret");
-        else if (`type`.equals("azure")) getConfig("AZURE_STORAGE_ACCESS_KEY");
+        else if (`type`.equals("azure")) getConfig("azure_storage_secret");
         else "";
     }
 }
