@@ -9,7 +9,7 @@ class TestS3StorageService extends FlatSpec with Matchers {
 
     it should "test for s3 storage" in {
 
-        val s3Service = StorageServiceFactory.getStorageService(StorageConfig("s3", AppConf.getStorageKey("s3"), AppConf.getStorageSecret("s3")))
+        val s3Service = StorageServiceFactory.getStorageService(StorageConfig("aws", AppConf.getStorageKey("aws"), AppConf.getStorageSecret("aws")))
 
         val storageContainer = AppConf.getConfig("aws_storage_container")
 

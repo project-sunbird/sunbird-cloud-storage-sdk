@@ -10,7 +10,7 @@ object StorageServiceFactory {
 
     def getStorageService(config: StorageConfig): BaseStorageService = {
         config.`type`.toLowerCase() match {
-            case "s3"      =>
+            case "aws"      =>
                 new S3StorageService(config);
             case "azure"   =>
                 new AzureStorageService(config);
