@@ -11,42 +11,44 @@ class TestAzureStorageService extends FlatSpec with Matchers {
 
         val azureService = StorageServiceFactory.getStorageService(StorageConfig("azure", AppConf.getStorageKey("azure"), AppConf.getStorageSecret("azure")))
 
-        azureService.upload("test-container", "src/test/resources/test-data.log", "testUpload/test-blob.log")
-        azureService.download("test-container", "testUpload/test-blob.log", "src/test/resources/test-azure/")
+        val storageContainer = AppConf.getConfig("azure_storage_container")
+
+        azureService.upload(storageContainer, "src/test/resources/test-data.log", "testUpload/test-blob.log")
+        azureService.download(storageContainer, "testUpload/test-blob.log", "src/test/resources/test-azure/")
 
         // upload directory
-        println("url of folder", azureService.upload("test-container", "src/test/resources/1234/", "testUpload/1234/", None, Option(true)))
+        println("url of folder", azureService.upload(storageContainer, "src/test/resources/1234/", "testUpload/1234/", None, Option(true)))
 
         // downlaod directory
-        azureService.download("test-container", "testUpload/1234/", "src/test/resources/test-azure/", Option(true))
+        azureService.download(storageContainer, "testUpload/1234/", "src/test/resources/test-azure/", Option(true))
 
-        println("azure signed url", azureService.getSignedURL("test-container", "testUpload/test-blob.log", Option(600)))
+        println("azure signed url", azureService.getSignedURL(storageContainer, "testUpload/test-blob.log", Option(600)))
 
-        val blob = azureService.getObject("test-container", "testUpload/test-blob.log")
+        val blob = azureService.getObject(storageContainer, "testUpload/test-blob.log")
         println("blob details: ", blob)
 
-        println("upload public url", azureService.upload("test-container", "src/test/resources/test-data.log", "testUpload/test-data-public.log", Option(true)))
-        println("upload public with expiry url", azureService.upload("test-container", "src/test/resources/test-data.log", "testUpload/test-data-with-expiry.log", Option(true), Option(false), Option(600)))
-        println("signed path to upload from external client", azureService.getSignedURL("test-container", "testUpload/test-data-public1.log", Option(600), Option("w")))
+        println("upload public url", azureService.upload(storageContainer, "src/test/resources/test-data.log", "testUpload/test-data-public.log", Option(true)))
+        println("upload public with expiry url", azureService.upload(storageContainer, "src/test/resources/test-data.log", "testUpload/test-data-with-expiry.log", Option(true), Option(false), Option(600)))
+        println("signed path to upload from external client", azureService.getSignedURL(storageContainer, "testUpload/test-data-public1.log", Option(600), Option("w")))
 
-        val keys = azureService.searchObjectkeys("test-container", "testUpload/1234/")
+        val keys = azureService.searchObjectkeys(storageContainer, "testUpload/1234/")
         keys.foreach(f => println(f))
-        val blobs = azureService.searchObjects("test-container", "testUpload/1234/")
+        val blobs = azureService.searchObjects(storageContainer, "testUpload/1234/")
         blobs.foreach(f => println(f))
 
-        val objData = azureService.getObjectData("test-container", "testUpload/test-blob.log")
+        val objData = azureService.getObjectData(storageContainer, "testUpload/test-blob.log")
         objData.length should be(18)
 
         // delete directory
-        azureService.deleteObject("test-container", "testUpload/1234/", Option(true))
-        azureService.deleteObject("test-container", "testUpload/test-blob.log")
-        //azureUtil.deleteObject("test-container", "testUpload/test-data-public.log")
-        //azureUtil.deleteObject("test-container", "testUpload/test-data-with-expiry.log")
+        azureService.deleteObject(storageContainer, "testUpload/1234/", Option(true))
+        azureService.deleteObject(storageContainer, "testUpload/test-blob.log")
+        //azureUtil.deleteObject(storageContainer, "testUpload/test-data-public.log")
+        //azureUtil.deleteObject(storageContainer, "testUpload/test-data-with-expiry.log")
 
-        azureService.upload("test-container", "src/test/resources/test-extract.zip", "testUpload/test-extract.zip")
-        azureService.copyObjects("test-container", "testUpload/test-extract.zip", "test-container", "testDuplicate/test-extract.zip")
+        azureService.upload(storageContainer, "src/test/resources/test-extract.zip", "testUpload/test-extract.zip")
+        azureService.copyObjects(storageContainer, "testUpload/test-extract.zip", storageContainer, "testDuplicate/test-extract.zip")
 
-        azureService.extractArchive("test-container", "testUpload/test-extract.zip", "testUpload/test-extract/")
+        azureService.extractArchive(storageContainer, "testUpload/test-extract.zip", "testUpload/test-extract/")
 
         azureService.closeContext()
     }
