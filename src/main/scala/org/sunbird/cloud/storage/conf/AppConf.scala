@@ -7,7 +7,7 @@ object AppConf {
 
     lazy val defaultConf = ConfigFactory.load();
     lazy val envConf = ConfigFactory.systemEnvironment();
-    lazy val conf = defaultConf.withFallback(envConf);
+    lazy val conf = envConf.withFallback(defaultConf);
 
     def getConfig(key: String): String = {
         if (conf.hasPath(key))
