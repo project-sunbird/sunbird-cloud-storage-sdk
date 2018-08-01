@@ -47,8 +47,10 @@ trait BaseStorageService extends IStorageService {
                 }
 
                 blobStore.createContainerInLocation(null, container)
-                val payload = Files.asByteSource(new File(file))
-                val blob = blobStore.blobBuilder(objectKey).payload(payload).contentLength(payload.size()).build()
+                val fileObj = new File(file)
+                val payload = Files.asByteSource(fileObj)
+                val  contentType = java.nio.file.Files.probeContentType(fileObj.toPath)
+                val blob = blobStore.blobBuilder(objectKey).payload(payload).contentType(contentType).contentLength(payload.size()).build()
                 val etag = blobStore.putBlob(container, blob)
                 if (isPublic.get) {
                     getSignedURL(container, objectKey, Option(ttl.getOrElse(maxSignedurlTTL)))
