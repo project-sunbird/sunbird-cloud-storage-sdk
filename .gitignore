@@ -3,3 +3,4 @@
 .project
 .settings
 .idea/
+src/test/resources/test*
