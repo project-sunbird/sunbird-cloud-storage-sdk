@@ -104,7 +104,7 @@ trait BaseStorageService extends IStorageService {
     override def download(container: String, objectKey: String, localPath: String, isDirectory: Option[Boolean] = Option(false)) = {
         try {
             if(isDirectory.get) {
-                val objects = listObjectKeys(container, objectKey)
+                val objects = listObjectKeys(container, objectKey, isDirectory)
                 for (obj <- objects) {
                     val file = FilenameUtils.getName(obj);
                     val fileObj = blobStore.getBlob(container, obj)
@@ -175,8 +175,11 @@ trait BaseStorageService extends IStorageService {
         }
     }
 
-    override def listObjectKeys(container: String, _prefix: String): List[String] = {
-        blobStore.list(container, prefix(_prefix)).asScala.map(f => f.getName).toList
+    override def listObjectKeys(container: String, _prefix: String, isDirectory: Option[Boolean] = Option(false)): List[String] = {
+        if(isDirectory.get)
+            blobStore.list(container, prefix(_prefix).recursive()).asScala.map(f => f.getName).toList
+        else
+            blobStore.list(container, prefix(_prefix)).asScala.map(f => f.getName).toList
     }
 
     override def searchObjects(container: String, prefix: String, fromDate: Option[String] = None, toDate: Option[String] = None, delta: Option[Int] = None, pattern: String = "yyyy-MM-dd"): List[Blob] = {
@@ -209,9 +212,10 @@ trait BaseStorageService extends IStorageService {
 
     override def copyObjects(fromContainer: String, fromKey: String, toContainer: String, toKey: String, isDirectory: Option[Boolean] = Option(false)): Unit = {
         if(isDirectory.get) {
-            val objectKeys = listObjectKeys(fromContainer, fromKey)
+            val objectKeys = listObjectKeys(fromContainer, fromKey, isDirectory)
             for (obj <- objectKeys) {
-                blobStore.copyBlob(fromContainer, obj, toContainer, obj, CopyOptions.NONE)
+                val objName = obj.split("/").last
+                blobStore.copyBlob(fromContainer, obj, toContainer, toKey+objName, CopyOptions.NONE)
             }
         }
         else blobStore.copyBlob(fromContainer, fromKey, toContainer, toKey, CopyOptions.NONE)

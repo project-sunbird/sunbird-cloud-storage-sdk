@@ -40,13 +40,15 @@ class TestAzureStorageService extends FlatSpec with Matchers {
         objData.length should be(18)
 
         // delete directory
-        azureService.deleteObject(storageContainer, "testUpload/1234/", Option(true))
+//        azureService.deleteObject(storageContainer, "testUpload/1234/", Option(true))
         azureService.deleteObject(storageContainer, "testUpload/test-blob.log")
         //azureUtil.deleteObject(storageContainer, "testUpload/test-data-public.log")
         //azureUtil.deleteObject(storageContainer, "testUpload/test-data-with-expiry.log")
+        azureService.deleteObject(storageContainer, "testDuplicate/1234/", Option(true))
 
         azureService.upload(storageContainer, "src/test/resources/test-extract.zip", "testUpload/test-extract.zip")
         azureService.copyObjects(storageContainer, "testUpload/test-extract.zip", storageContainer, "testDuplicate/test-extract.zip")
+        azureService.copyObjects(storageContainer, "testUpload/1234/", storageContainer, "testDuplicate/1234/", Option(true))
 
         azureService.extractArchive(storageContainer, "testUpload/test-extract.zip", "testUpload/test-extract/")
 
