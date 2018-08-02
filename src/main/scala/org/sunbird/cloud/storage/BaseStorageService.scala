@@ -214,8 +214,9 @@ trait BaseStorageService extends IStorageService {
         if(isDirectory.get) {
             val objectKeys = listObjectKeys(fromContainer, fromKey, isDirectory)
             for (obj <- objectKeys) {
-                val objName = obj.split("/").last
-                blobStore.copyBlob(fromContainer, obj, toContainer, toKey+objName, CopyOptions.NONE)
+                val objName = obj.split("/").tail
+                val updatedPrefix = if(toKey.endsWith("/")) toKey else toKey+"/"
+                blobStore.copyBlob(fromContainer, obj, toContainer, updatedPrefix+objName, CopyOptions.NONE)
             }
         }
         else blobStore.copyBlob(fromContainer, fromKey, toContainer, toKey, CopyOptions.NONE)

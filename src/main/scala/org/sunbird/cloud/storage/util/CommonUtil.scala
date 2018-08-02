@@ -14,8 +14,11 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.Paths.get
 import java.nio.file.StandardCopyOption
-import java.io.{ IOException, FileOutputStream, FileInputStream, File }
-import java.util.zip.{ ZipEntry, ZipInputStream }
+import java.io.{File, FileInputStream, FileOutputStream, IOException}
+import java.util.zip.{ZipEntry, ZipInputStream}
+
+import org.apache.commons.io.FilenameUtils
+import org.apache.commons.lang3.StringUtils
 
 object CommonUtil {
 
@@ -68,24 +71,29 @@ object CommonUtil {
 
             while (ze != null) {
                 val fileName = ze.getName();
-                val newFile = new File(outputFolder + File.separator + fileName);
+                println("fileName: ", fileName)
+                if (!(FilenameUtils.getName(fileName).startsWith(".") | fileName.startsWith("_"))) {
+                    val newFile = new File(outputFolder + File.separator + fileName);
 
-                //create folders
-                new File(newFile.getParent()).mkdirs();
-                val fos = new FileOutputStream(newFile);
-                var len: Int = zis.read(buffer);
-                while (len > 0) {
-                    fos.write(buffer, 0, len)
-                    len = zis.read(buffer)
+                    //create folders
+                    new File(newFile.getParent()).mkdirs();
+                    val fos = new FileOutputStream(newFile);
+                    var len: Int = zis.read(buffer);
+                    while (len > 0) {
+                        fos.write(buffer, 0, len)
+                        len = zis.read(buffer)
+                    }
+                    fos.close()
                 }
-                fos.close()
                 ze = zis.getNextEntry()
             }
             zis.closeEntry()
             zis.close()
 
         } catch {
-            case e: IOException => println("exception caught: " + e.getMessage)
+            case e: IOException =>
+                e.printStackTrace()
+                println("exception caught: " + e.getMessage)
         }
 
     }
