@@ -212,11 +212,12 @@ trait BaseStorageService extends IStorageService {
 
     override def copyObjects(fromContainer: String, fromKey: String, toContainer: String, toKey: String, isDirectory: Option[Boolean] = Option(false)): Unit = {
         if(isDirectory.get) {
-            val objectKeys = listObjectKeys(fromContainer, fromKey, isDirectory)
+            val updatedFromKey = if(fromKey.endsWith("/")) fromKey else fromKey+"/"
+            val updatedToKey = if(toKey.endsWith("/")) toKey else toKey+"/"
+            val objectKeys = listObjectKeys(fromContainer, updatedFromKey, isDirectory)
             for (obj <- objectKeys) {
-                val objName = obj.split("/").tail
-                val updatedPrefix = if(toKey.endsWith("/")) toKey else toKey+"/"
-                blobStore.copyBlob(fromContainer, obj, toContainer, updatedPrefix+objName, CopyOptions.NONE)
+                val objName = obj.replace(updatedFromKey, "")
+                blobStore.copyBlob(fromContainer, obj, toContainer, updatedToKey+objName, CopyOptions.NONE)
             }
         }
         else blobStore.copyBlob(fromContainer, fromKey, toContainer, toKey, CopyOptions.NONE)
