@@ -7,7 +7,7 @@ import org.sunbird.cloud.storage.factory.{StorageConfig, StorageServiceFactory}
 
 class TestS3StorageService extends FlatSpec with Matchers {
 
-    it should "test for s3 storage" in {
+    ignore should "test for s3 storage" in {
 
         val s3Service = StorageServiceFactory.getStorageService(StorageConfig("aws", AppConf.getStorageKey("aws"), AppConf.getStorageSecret("aws")))
 

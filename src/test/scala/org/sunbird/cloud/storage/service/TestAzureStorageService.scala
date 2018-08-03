@@ -7,7 +7,7 @@ import org.sunbird.cloud.storage.conf.AppConf
 
 class TestAzureStorageService extends FlatSpec with Matchers {
 
-    it should "test for azure storage" in {
+    ignore should "test for azure storage" in {
 
         val azureService = StorageServiceFactory.getStorageService(StorageConfig("azure", AppConf.getStorageKey("azure"), AppConf.getStorageSecret("azure")))
 
