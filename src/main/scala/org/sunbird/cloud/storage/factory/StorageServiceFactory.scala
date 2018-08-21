@@ -8,6 +8,11 @@ case class StorageConfig(`type`: String, storageKey: String, storageSecret: Stri
 
 object StorageServiceFactory {
 
+  /**
+    * Creates StorageService based on the given config
+    * @param config
+    * @return
+    */
     def getStorageService(config: StorageConfig): BaseStorageService = {
         config.`type`.toLowerCase() match {
             case "aws"      =>
