@@ -1,16 +1,16 @@
 package org.sunbird.cloud.storage
 
 import org.jclouds.blobstore._
-import org.jclouds.blobstore.util._
 import com.google.common.io._
 import java.io._
-import org.jclouds.blobstore.domain._
+
 import org.apache.commons.io.FilenameUtils
-import org.apache.commons.lang3.StringUtils
+import org.apache.tika.Tika
 import org.sunbird.cloud.storage.exception.StorageServiceException
 import org.sunbird.cloud.storage.util.{CommonUtil, JSONUtils}
+
 import collection.JavaConverters._
-import org.jclouds.blobstore.options.ListContainerOptions.Builder.{prefix, _}
+import org.jclouds.blobstore.options.ListContainerOptions.Builder.prefix
 import org.sunbird.cloud.storage.Model.Blob
 import org.jclouds.blobstore.options.CopyOptions
 import org.sunbird.cloud.storage.conf.AppConf
@@ -23,6 +23,7 @@ trait BaseStorageService extends IStorageService {
     var maxSignedurlTTL: Int = 604800
     var attempt = 0
     var maxContentLength = 0
+    val tika = new Tika()
 
     override def upload(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), isDirectory: Option[Boolean] = Option(false), ttl: Option[Int] = None, retryCount: Option[Int] = None): String = {
 
@@ -49,9 +50,9 @@ trait BaseStorageService extends IStorageService {
                 blobStore.createContainerInLocation(null, container)
                 val fileObj = new File(file)
                 val payload = Files.asByteSource(fileObj)
-                val  contentType = java.nio.file.Files.probeContentType(fileObj.toPath)
+                val  contentType = tika.detect(fileObj)
                 val blob = blobStore.blobBuilder(objectKey).payload(payload).contentType(contentType).contentLength(payload.size()).build()
-                val etag = blobStore.putBlob(container, blob)
+                blobStore.putBlob(container, blob)
                 if (isPublic.get) {
                     getSignedURL(container, objectKey, Option(ttl.getOrElse(maxSignedurlTTL)))
                 }
@@ -78,7 +79,7 @@ trait BaseStorageService extends IStorageService {
 
             blobStore.createContainerInLocation(null, container)
             val blob = blobStore.blobBuilder(objectKey).payload(content).contentLength(content.length).build()
-            val etag = blobStore.putBlob(container, blob)
+            blobStore.putBlob(container, blob)
             if(isPublic.get) {
                 getSignedURL(container, objectKey, Option(ttl.getOrElse(maxSignedurlTTL)))
             }
