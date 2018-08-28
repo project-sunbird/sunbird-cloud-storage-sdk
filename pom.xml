@@ -1,19 +1,49 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.sunbird</groupId>
-    <artifactId>sunbird-cloud-store-sdk</artifactId>
+    <artifactId>cloud-store-sdk</artifactId>
     <version>1.0</version>
     <packaging>jar</packaging>
-    <name>sunbird-cloud-store-sdk</name>
-    <url>http://maven.apache.org</url>
+    <name>Cloud Store SDK</name>
+    <description>cloud-store-sdk provides client APIs to handle cloud store (AWS S3, Azure Blobstore).</description>
+    <url>https://www.sunbird.org/</url>
     <properties>
-    		<maven.compiler.source>1.7</maven.compiler.source>
+    	<maven.compiler.source>1.7</maven.compiler.source>
 		<maven.compiler.target>1.7</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <scoverage.plugin.version>1.1.1</scoverage.plugin.version>
 		<scala.maj.version>2.11</scala.maj.version>
 		<scala.version>2.11.8</scala.version>
     </properties>
+    <licenses>
+		<license>
+    		<name>MIT License</name>
+    		<url>http://www.opensource.org/licenses/mit-license.php</url>
+  		</license>
+	</licenses>
+	<developers>
+    <developer>
+		<name>Sunbird</name>
+		<email>info@sunbird.org</email>
+		<organization>Sunbird</organization>
+		<organizationUrl>https://www.sunbird.org/</organizationUrl>
+    </developer>
+  </developers>
+    <distributionManagement>
+  		<snapshotRepository>
+    		<id>ossrh</id>
+    		<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+  		</snapshotRepository>
+  		<repository>
+    		<id>ossrh</id>
+    		<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+  		</repository>
+	</distributionManagement>
+	<scm>
+    	<connection>scm:git:git://github.com/project-sunbird/sunbird-cloud-storage-sdk.git</connection>
+    	<developerConnection>scm:git:ssh://github.com/project-sunbird/sunbird-cloud-storage-sdk.git</developerConnection>
+    	<url>https://github.com/project-sunbird/sunbird-cloud-storage-sdk/tree/master</url>
+   </scm>
     <dependencies>
     		<dependency>
 			<groupId>org.scala-lang</groupId>
@@ -63,11 +93,6 @@
 			<version>2.2.4</version>
 			<scope>test</scope>
 		</dependency>
-		<!--<dependency>-->
-			<!--<groupId>com.fasterxml.jackson.core</groupId>-->
-			<!--<artifactId>jackson-annotations</artifactId>-->
-			<!--<version>2.7.8</version>-->
-		<!--</dependency>-->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
@@ -78,7 +103,12 @@
 			<artifactId>jackson-module-scala_${scala.maj.version}</artifactId>
 			<version>2.7.8</version>
 		</dependency>
-    </dependencies>
+		<dependency>
+			<groupId>org.apache.tika</groupId>
+			<artifactId>tika-core</artifactId>
+			<version>1.18</version>
+		</dependency>
+	</dependencies>
     <build>
 		<sourceDirectory>src/main/scala</sourceDirectory>
 		<testSourceDirectory>src/test/scala</testSourceDirectory>
@@ -100,6 +130,12 @@
 								<arg>${project.build.directory}/.scala_dependencies</arg>
 							</args>
 						</configuration>
+					</execution>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>doc-jar</goal>
+						</goals>
 					</execution>
 				</executions>
 			</plugin>
@@ -129,38 +165,42 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<version>2.4.3</version>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>shade</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<transformers>
-						<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-	              			<resource>META-INF/services/org.jclouds.apis.ApiMetadata</resource>
-	            			</transformer>
-	            			<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-	              			<resource>META-INF/services/org.jclouds.providers.ProviderMetadata</resource>
-	            			</transformer>
-	            		</transformers>	
-					<filters>
-						<filter>
-							<artifact>*:*</artifact>
-							<excludes>
-								<artifact>*:*</artifact>
-								<exclude>META-INF/*.SF</exclude>
-								<exclude>META-INF/*.DSA</exclude>
-								<exclude>META-INF/*.RSA</exclude>
-							</excludes>
-						</filter>
-					</filters>
-				</configuration>
-			</plugin>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>2.2.1</version>
+		      	<executions>
+		        	<execution>
+		          		<id>attach-sources</id>
+		          		<goals>
+		            		<goal>jar-no-fork</goal>
+		          		</goals>
+		        	</execution>
+		      </executions>
+		    </plugin>
+		    <plugin>
+      			<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>1.5</version>
+      			<executions>
+        			<execution>
+          				<id>sign-artifacts</id>
+          				<phase>verify</phase>
+          				<goals>
+            				<goal>sign</goal>
+          				</goals>
+        			</execution>
+      			</executions>
+    		</plugin>
+			<plugin>
+		      	<groupId>org.sonatype.plugins</groupId>
+		      	<artifactId>nexus-staging-maven-plugin</artifactId>
+		      	<version>1.6.7</version>
+		      	<extensions>true</extensions>
+		      	<configuration>
+		        	<serverId>ossrh</serverId>
+		        	<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+		        	<!-- <autoReleaseAfterClose>true</autoReleaseAfterClose> -->
+		      	</configuration>
+		    </plugin>
 		</plugins>
 	</build>
 </project>
