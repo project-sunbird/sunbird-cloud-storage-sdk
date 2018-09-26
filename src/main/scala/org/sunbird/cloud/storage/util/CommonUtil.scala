@@ -71,10 +71,8 @@ object CommonUtil {
 
             while (ze != null) {
                 val fileName = ze.getName();
-                println("fileName: ", fileName)
-                if (!(FilenameUtils.getName(fileName).startsWith(".") | fileName.startsWith("_"))) {
+                if (!(FilenameUtils.getName(fileName).startsWith(".") | fileName.startsWith("_") | StringUtils.isBlank(FilenameUtils.getName(fileName)))) {
                     val newFile = new File(outputFolder + File.separator + fileName);
-
                     //create folders
                     new File(newFile.getParent()).mkdirs();
                     val fos = new FileOutputStream(newFile);

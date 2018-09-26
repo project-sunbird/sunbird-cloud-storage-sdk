@@ -120,7 +120,7 @@ trait BaseStorageService extends IStorageService {
             }
         } catch {
             case e: Exception =>
-                throw new StorageServiceException(e.getMessage)
+                throw new StorageServiceException(e.getMessage, e)
         }
     }
 
@@ -129,7 +129,7 @@ trait BaseStorageService extends IStorageService {
             deleteObjects(container, List((objectKey, isDirectory.get)))
         } catch {
             case e: Exception =>
-                throw new StorageServiceException(e.getMessage)
+                throw new StorageServiceException(e.getMessage, e)
         }
     }
 
@@ -146,7 +146,7 @@ trait BaseStorageService extends IStorageService {
             }
         } catch {
             case e: Exception =>
-                throw new StorageServiceException(e.getMessage)
+                throw new StorageServiceException(e.getMessage, e)
         }
     }
 
@@ -159,7 +159,7 @@ trait BaseStorageService extends IStorageService {
             Blob(objectKey, objData.getContentMetadata.getContentLength, objData.getLastModified, metaData, payload)
         } catch {
             case e: Exception =>
-                throw new StorageServiceException(e.getMessage)
+                throw new StorageServiceException(e.getMessage, e)
         }
     }
 
@@ -172,7 +172,7 @@ trait BaseStorageService extends IStorageService {
         }
         catch {
             case e: Exception =>
-                throw new StorageServiceException(e.getMessage)
+                throw new StorageServiceException(e.getMessage, e)
         }
     }
 
@@ -234,7 +234,7 @@ trait BaseStorageService extends IStorageService {
         }
         catch {
             case e: Exception =>
-                throw new StorageServiceException(e.getMessage)
+                throw new StorageServiceException(e.getMessage, e)
         }
     }
 
@@ -245,7 +245,7 @@ trait BaseStorageService extends IStorageService {
             scala.io.Source.fromInputStream(inStream).getLines().toArray
         } catch {
             case e: Exception =>
-                throw new StorageServiceException(e.getMessage)
+                throw new StorageServiceException(e.getMessage, e)
         }
     }
 
