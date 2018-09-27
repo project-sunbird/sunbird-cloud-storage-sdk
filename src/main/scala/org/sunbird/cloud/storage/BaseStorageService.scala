@@ -249,6 +249,19 @@ trait BaseStorageService extends IStorageService {
         }
     }
 
+    override def getUri(container: String, _prefix: String, isDirectory: Option[Boolean] = Option(false)): String = {
+        val keys = listObjectKeys(container, _prefix, isDirectory);
+        if (keys.isEmpty)
+            throw new StorageServiceException("The given _prefix is incorrect: " + _prefix)
+        val prefix = keys.head
+        val blob = getObject(container, prefix, Option(false))
+        val uri = blob.metadata.get("uri")
+        if (!uri.isEmpty) {
+            uri.get.asInstanceOf[String].split(_prefix).head + _prefix
+        } else
+            throw new StorageServiceException("uri not available for the given prefix: "+ _prefix)
+    }
+
     def closeContext() = {
         context.close()
     }

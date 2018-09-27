@@ -182,4 +182,15 @@ trait IStorageService {
       */
     def getObjectData(container: String, objectKey: String): Array[String]
 
+
+    /**
+      * Get the URI of the given prefix
+      *
+      * @param container
+      * @param _prefix
+      * @param isDirectory
+      * @return String - URI of the given prefix
+      */
+    def getUri(container: String, _prefix: String, isDirectory: Option[Boolean] = Option(false)): String
+
 }
