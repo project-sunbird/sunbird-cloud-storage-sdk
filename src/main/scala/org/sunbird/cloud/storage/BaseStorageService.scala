@@ -43,7 +43,7 @@ trait BaseStorageService extends IStorageService {
                 val d = new File(file)
                 val files = filesList(d)
                 val list = files.map {f =>
-                    val key = objectKey + f.getName.split("/").last
+                    val key = objectKey + f.getAbsolutePath.split(d.getAbsolutePath + File.separator).last
                     upload(container, f.getAbsolutePath, key)
                 }
                 list.toString()
