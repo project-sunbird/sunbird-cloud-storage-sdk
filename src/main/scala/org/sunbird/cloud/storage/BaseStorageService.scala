@@ -25,16 +25,23 @@ trait BaseStorageService extends IStorageService {
     var maxContentLength = 0
     val tika = new Tika()
 
+    def filesList(file: File): List[File] = {
+        if (file.exists && file.isDirectory) {
+            val files = file.listFiles.filter(_.isDirectory).flatMap(f => filesList(f)).toList
+            files ++ file.listFiles.filter(_.isFile).toList;
+        } else if (file.exists && file.isFile) {
+          List[File](file)
+        } else {
+            List[File]();
+        }
+    }
+
     override def upload(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), isDirectory: Option[Boolean] = Option(false), ttl: Option[Int] = None, retryCount: Option[Int] = None): String = {
 
         try {
             if(isDirectory.get) {
                 val d = new File(file)
-                val files = if (d.exists && d.isDirectory) {
-                    d.listFiles.filter(_.isFile).toList;
-                } else {
-                    List[File]();
-                }
+                val files = filesList(d)
                 val list = files.map {f =>
                     val key = objectKey + f.getName.split("/").last
                     upload(container, f.getAbsolutePath, key)
