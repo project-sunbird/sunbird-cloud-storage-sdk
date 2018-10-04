@@ -17,18 +17,22 @@ class TestAzureStorageService extends FlatSpec with Matchers {
         azureService.download(storageContainer, "testUpload/test-blob.log", "src/test/resources/test-azure/")
 
         // upload directory
-        println("url of folder", azureService.upload(storageContainer, "src/test/resources/1234/", "testUpload/1234/", None, Option(true)))
+        println("url of folder", azureService.upload(container = storageContainer, file = "src/test/resources/1234/",
+            objectKey = "testUpload/1234/", isDirectory = true))
 
         // downlaod directory
-        azureService.download(storageContainer, "testUpload/1234/", "src/test/resources/test-azure/", Option(true))
+        azureService.download(storageContainer, "testUpload/1234/", "src/test/resources/test-azure/", isDirectory = true)
 
         println("azure signed url", azureService.getSignedURL(storageContainer, "testUpload/test-blob.log", Option(600)))
 
         val blob = azureService.getObject(storageContainer, "testUpload/test-blob.log")
         println("blob details: ", blob)
 
-        println("upload public url", azureService.upload(storageContainer, "src/test/resources/test-data.log", "testUpload/test-data-public.log", Option(true)))
-        println("upload public with expiry url", azureService.upload(storageContainer, "src/test/resources/test-data.log", "testUpload/test-data-with-expiry.log", Option(true), Option(false), Option(600)))
+        println("upload public url", azureService.upload(container = storageContainer, file = "src/test/resources/test-data.log",
+            objectKey = "testUpload/test-data-public.log", isPublic = true))
+        println("upload public with expiry url", azureService.upload(container = storageContainer,
+            file ="src/test/resources/test-data.log", objectKey = "testUpload/test-data-with-expiry.log",
+            isPublic = true, isDirectory = false, Option(600)))
         println("signed path to upload from external client", azureService.getSignedURL(storageContainer, "testUpload/test-data-public1.log", Option(600), Option("w")))
 
         val keys = azureService.searchObjectkeys(storageContainer, "testUpload/1234/")
@@ -48,7 +52,7 @@ class TestAzureStorageService extends FlatSpec with Matchers {
 
         azureService.upload(storageContainer, "src/test/resources/test-extract.zip", "testUpload/test-extract.zip")
         azureService.copyObjects(storageContainer, "testUpload/test-extract.zip", storageContainer, "testDuplicate/test-extract.zip")
-        azureService.copyObjects(storageContainer, "testUpload/1234/", storageContainer, "testDuplicate/1234/", Option(true))
+        azureService.copyObjects(storageContainer, "testUpload/1234/", storageContainer, "testDuplicate/1234/", isDirectory = true)
 
         azureService.extractArchive(storageContainer, "testUpload/test-extract.zip", "testUpload/test-extract/")
 

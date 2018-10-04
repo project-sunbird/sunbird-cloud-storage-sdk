@@ -10,14 +10,14 @@ trait IStorageService {
      * @param container String - The container/bucket to upload the file to.
      * @param file String - The file path.
      * @param objectKey String - The destination key/path to upload the file to. If the path exists it will be overwritten.
-     * @param isPublic Option[Boolean] - Whether the file should have public read access? Optional and defaults to false.
-     * @param isDirectory Option[Boolean] - Whether the file is a directory and need to upload folder recursively?
+     * @param isPublic Boolean - Whether the file should have public read access? Optional and defaults to false.
+     * @param isDirectory Boolean - Whether the file is a directory and need to upload folder recursively?
      * @param ttl Option[Int] - The ttl/expiry for the file. Optional and default is never expires
      * @param retryCount Option[Int] - Number of times the upload will be retried before failing. Defaults to global configuration "max.retries"
      * 
      * @return String - The url of the file/folder uploaded
      */
-    def upload(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), isDirectory: Option[Boolean] = Option(false), 
+    def upload(container: String, file: String, objectKey: String, isPublic: Boolean = false, isDirectory: Boolean = false,
             ttl: Option[Int] = None, retryCount: Option[Int] = None): String
         
     /**
@@ -54,9 +54,9 @@ trait IStorageService {
      * @param container String - The container/bucket of the file
      * @param objectKey String - The key/path of the file to download from
      * @param localPath String - The local destination path to download to
-     * @param isDirectory Option[Boolean] - Whether the file is a directory and need to be downloaded recursively? Optional and defaults to false.
+     * @param isDirectory Boolean - Whether the file is a directory and need to be downloaded recursively? Optional and defaults to false.
      */
-    def download(container: String, objectKey: String, localPath: String, isDirectory: Option[Boolean] = Option(false))
+    def download(container: String, objectKey: String, localPath: String, isDirectory: Boolean = false)
 
     /**
      * Delete an object from the cloud store
@@ -84,7 +84,7 @@ trait IStorageService {
      * @param toKey String - The object prefix to copy to.
      * @param isDirectory Option[Boolean] - Whether the copy is a file or folder? Defaults to false i.e copy one file.
      */
-    def copyObjects(fromContainer: String, fromKey: String, toContainer: String, toKey: String, isDirectory: Option[Boolean] = Option(false))
+    def copyObjects(fromContainer: String, fromKey: String, toContainer: String, toKey: String, isDirectory: Boolean = false)
 
 
     /**
@@ -118,15 +118,14 @@ trait IStorageService {
      */
     def listObjects(container: String, prefix: String, withPayload: Option[Boolean] = Option(false)): List[Blob]
 
-    /**
-     * List object keys from cloud storage for a given prefix. Similar to <code>listObjects()</code>
-     * 
-     * @param container String - The container/bucket
-     * @param _prefix String - The object prefix to list objects. The prefix can be folder or pattern.
-     * 
-     * @return List[Blob] - The blob objects for the given prefix.
-     */
-    def listObjectKeys(container: String, _prefix: String, isDirectory: Option[Boolean] = Option(false)): List[String]
+  /**
+    * List object keys from cloud storage for a given prefix. Similar to <code>listObjects()</code>
+    * @param container - The container/bucket
+    * @param _prefix - The object prefix to list objects. The prefix can be folder or pattern.
+    * @param isDirectory - specify if the prefix is a directory
+    * @return
+    */
+    def listObjectKeys(container: String, _prefix: String, isDirectory: Boolean = false): List[String]
 
     /**
      * Search for objects for a given prefix and return only keys. Specifically used for telemetry files as the files are prefixed by sync date. 
