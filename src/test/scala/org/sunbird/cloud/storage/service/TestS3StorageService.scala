@@ -17,18 +17,23 @@ class TestS3StorageService extends FlatSpec with Matchers {
         s3Service.download(storageContainer, "testUpload/test-blob.log", "src/test/resources/test-s3/")
 
         // upload directory
-        println("url of folder", s3Service.upload(storageContainer, "src/test/resources/1234/", "testUpload/1234/", None, Option(true)))
+        println("url of folder",
+            s3Service.upload(container = storageContainer, file = "src/test/resources/1234/",
+                objectKey = "testUpload/1234/", isDirectory = true))
 
         // downlaod directory
-        s3Service.download(storageContainer, "testUpload/1234/", "src/test/resources/test-s3/", Option(true))
+        s3Service.download(storageContainer, "testUpload/1234/", "src/test/resources/test-s3/", isDirectory = true)
 
         println("azure signed url", s3Service.getSignedURL(storageContainer, "testUpload/test-blob.log", Option(600)))
 
         val blob = s3Service.getObject(storageContainer, "testUpload/test-blob.log")
         println("blob details: ", blob)
 
-        println("upload public url", s3Service.upload(storageContainer, "src/test/resources/test-data.log", "testUpload/test-data-public.log", Option(true)))
-        println("upload public with expiry url", s3Service.upload(storageContainer, "src/test/resources/test-data.log", "testUpload/test-data-with-expiry.log", Option(true), Option(false), Option(600)))
+        println("upload public url", s3Service.upload(storageContainer, "src/test/resources/test-data.log",
+            "testUpload/test-data-public.log", isPublic = true))
+        println("upload public with expiry url",
+            s3Service.upload(container = storageContainer, file = "src/test/resources/test-data.log",
+            objectKey = "testUpload/test-data-with-expiry.log", isPublic = true, ttl = Option(600)))
         println("signed path to upload from external client", s3Service.getSignedURL(storageContainer, "testUpload/test-data-public1.log", Option(600), Option("w")))
 
         val keys = s3Service.searchObjectkeys(storageContainer, "testUpload/1234/")
