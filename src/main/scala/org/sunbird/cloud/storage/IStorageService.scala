@@ -126,7 +126,7 @@ trait IStorageService {
      * 
      * @return List[Blob] - The blob objects for the given prefix.
      */
-    def listObjectKeys(container: String, _prefix: String, isDirectory: Option[Boolean] = Option(false)): List[String]
+    def listObjectKeys(container: String, _prefix: String): List[String]
 
     /**
      * Search for objects for a given prefix and return only keys. Specifically used for telemetry files as the files are prefixed by sync date. 

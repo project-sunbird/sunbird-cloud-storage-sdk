@@ -10,10 +10,12 @@ import org.sunbird.cloud.storage.exception.StorageServiceException
 import org.sunbird.cloud.storage.util.{CommonUtil, JSONUtils}
 
 import collection.JavaConverters._
-import org.jclouds.blobstore.options.ListContainerOptions.Builder.prefix
+import org.jclouds.blobstore.options.ListContainerOptions.Builder.{prefix, afterMarker, recursive}
 import org.sunbird.cloud.storage.Model.Blob
 import org.jclouds.blobstore.options.CopyOptions
 import org.sunbird.cloud.storage.conf.AppConf
+
+import scala.collection.mutable.ListBuffer
 
 trait BaseStorageService extends IStorageService {
 
@@ -112,7 +114,7 @@ trait BaseStorageService extends IStorageService {
     override def download(container: String, objectKey: String, localPath: String, isDirectory: Option[Boolean] = Option(false)) = {
         try {
             if(isDirectory.get) {
-                val objects = listObjectKeys(container, objectKey, isDirectory)
+                val objects = listObjectKeys(container, objectKey)
                 for (obj <- objects) {
                     val file = FilenameUtils.getName(obj);
                     val fileObj = blobStore.getBlob(container, obj)
@@ -183,21 +185,27 @@ trait BaseStorageService extends IStorageService {
         }
     }
 
-    override def listObjectKeys(container: String, _prefix: String, isDirectory: Option[Boolean] = Option(false)): List[String] = {
-        if(isDirectory.get)
-            blobStore.list(container, prefix(_prefix).recursive()).asScala.map(f => f.getName).toList
-        else
-            blobStore.list(container, prefix(_prefix)).asScala.map(f => f.getName).toList
+    override def listObjectKeys(container: String, _prefix: String): List[String] = {
+        val fileNames = ListBuffer[String]()
+        val containerOpts = recursive().prefix(_prefix)
+        var marker: Option[String] = None
+        do {
+            if (marker.exists(_.trim.nonEmpty)) containerOpts.afterMarker(marker.getOrElse(""))
+            val pageSet = blobStore.list(container, containerOpts)
+            fileNames ++= pageSet.asScala.map(f => f.getName).toList
+            marker = Option(pageSet.getNextMarker)
+        } while (marker.isDefined)
+        fileNames.toList
     }
 
     override def searchObjects(container: String, prefix: String, fromDate: Option[String] = None, toDate: Option[String] = None, delta: Option[Int] = None, pattern: String = "yyyy-MM-dd"): List[Blob] = {
         val from = if (delta.nonEmpty) CommonUtil.getStartDate(toDate, delta.get) else fromDate;
         if (from.nonEmpty) {
-            val dates = CommonUtil.getDatesBetween(from.get, toDate, pattern);
+            val dates = CommonUtil.getDatesBetween(from.get, toDate, pattern)
             val paths = for (date <- dates) yield {
                 listObjects(container, prefix + date)
             }
-            paths.flatMap { x => x.map { x => x } }.toList;
+            paths.flatMap { x => x.map { x => x } }.toList
         } else {
             listObjects(container, prefix)
         }
@@ -212,7 +220,7 @@ trait BaseStorageService extends IStorageService {
             val paths = for (date <- dates) yield {
                 listObjectKeys(container, prefix + date)
             }
-            paths.flatMap { x => x.map { x => x } }.toList;
+            paths.flatMap { x => x.map { x => x } }.toList
         } else {
             listObjectKeys(container, prefix)
         }
@@ -222,7 +230,7 @@ trait BaseStorageService extends IStorageService {
         if(isDirectory.get) {
             val updatedFromKey = if(fromKey.endsWith("/")) fromKey else fromKey+"/"
             val updatedToKey = if(toKey.endsWith("/")) toKey else toKey+"/"
-            val objectKeys = listObjectKeys(fromContainer, updatedFromKey, isDirectory)
+            val objectKeys = listObjectKeys(fromContainer, updatedFromKey)
             for (obj <- objectKeys) {
                 val objName = obj.replace(updatedFromKey, "")
                 blobStore.copyBlob(fromContainer, obj, toContainer, updatedToKey+objName, CopyOptions.NONE)
