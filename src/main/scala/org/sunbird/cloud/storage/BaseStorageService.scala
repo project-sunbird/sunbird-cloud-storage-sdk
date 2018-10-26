@@ -25,18 +25,25 @@ trait BaseStorageService extends IStorageService {
     var maxContentLength = 0
     val tika = new Tika()
 
+    def filesList(file: File): List[File] = {
+        if (file.exists && file.isDirectory) {
+            val files = file.listFiles.filter(_.isDirectory).flatMap(f => filesList(f)).toList
+            files ++ file.listFiles.filter(_.isFile).toList;
+        } else if (file.exists && file.isFile) {
+          List[File](file)
+        } else {
+            List[File]();
+        }
+    }
+
     override def upload(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), isDirectory: Option[Boolean] = Option(false), ttl: Option[Int] = None, retryCount: Option[Int] = None): String = {
 
         try {
             if(isDirectory.get) {
                 val d = new File(file)
-                val files = if (d.exists && d.isDirectory) {
-                    d.listFiles.filter(_.isFile).toList;
-                } else {
-                    List[File]();
-                }
+                val files = filesList(d)
                 val list = files.map {f =>
-                    val key = objectKey + f.getName.split("/").last
+                    val key = objectKey + f.getAbsolutePath.split(d.getAbsolutePath + File.separator).last
                     upload(container, f.getAbsolutePath, key)
                 }
                 list.toString()
@@ -120,7 +127,7 @@ trait BaseStorageService extends IStorageService {
             }
         } catch {
             case e: Exception =>
-                throw new StorageServiceException(e.getMessage)
+                throw new StorageServiceException(e.getMessage, e)
         }
     }
 
@@ -129,7 +136,7 @@ trait BaseStorageService extends IStorageService {
             deleteObjects(container, List((objectKey, isDirectory.get)))
         } catch {
             case e: Exception =>
-                throw new StorageServiceException(e.getMessage)
+                throw new StorageServiceException(e.getMessage, e)
         }
     }
 
@@ -146,7 +153,7 @@ trait BaseStorageService extends IStorageService {
             }
         } catch {
             case e: Exception =>
-                throw new StorageServiceException(e.getMessage)
+                throw new StorageServiceException(e.getMessage, e)
         }
     }
 
@@ -159,7 +166,7 @@ trait BaseStorageService extends IStorageService {
             Blob(objectKey, objData.getContentMetadata.getContentLength, objData.getLastModified, metaData, payload)
         } catch {
             case e: Exception =>
-                throw new StorageServiceException(e.getMessage)
+                throw new StorageServiceException(e.getMessage, e)
         }
     }
 
@@ -172,7 +179,7 @@ trait BaseStorageService extends IStorageService {
         }
         catch {
             case e: Exception =>
-                throw new StorageServiceException(e.getMessage)
+                throw new StorageServiceException(e.getMessage, e)
         }
     }
 
@@ -234,7 +241,7 @@ trait BaseStorageService extends IStorageService {
         }
         catch {
             case e: Exception =>
-                throw new StorageServiceException(e.getMessage)
+                throw new StorageServiceException(e.getMessage, e)
         }
     }
 
@@ -245,8 +252,21 @@ trait BaseStorageService extends IStorageService {
             scala.io.Source.fromInputStream(inStream).getLines().toArray
         } catch {
             case e: Exception =>
-                throw new StorageServiceException(e.getMessage)
+                throw new StorageServiceException(e.getMessage, e)
         }
+    }
+
+    override def getUri(container: String, _prefix: String, isDirectory: Option[Boolean] = Option(false)): String = {
+        val keys = listObjectKeys(container, _prefix, isDirectory);
+        if (keys.isEmpty)
+            throw new StorageServiceException("The given _prefix is incorrect: " + _prefix)
+        val prefix = keys.head
+        val blob = getObject(container, prefix, Option(false))
+        val uri = blob.metadata.get("uri")
+        if (!uri.isEmpty) {
+            uri.get.asInstanceOf[String].split(_prefix).head + _prefix
+        } else
+            throw new StorageServiceException("uri not available for the given prefix: "+ _prefix)
     }
 
     def closeContext() = {

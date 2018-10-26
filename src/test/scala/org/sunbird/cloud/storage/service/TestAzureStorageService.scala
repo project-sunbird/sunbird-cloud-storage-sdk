@@ -27,6 +27,11 @@ class TestAzureStorageService extends FlatSpec with Matchers {
         val blob = azureService.getObject(storageContainer, "testUpload/test-blob.log")
         println("blob details: ", blob)
 
+        val folderUri = azureService.getUri(storageContainer, "testUpload", Option(true))
+        println("Folder URI: ", folderUri)
+        val fileUri = azureService.getUri(storageContainer, "testUpload/test-blob.log", Option(false))
+        println("File URI: ", fileUri)
+
         println("upload public url", azureService.upload(storageContainer, "src/test/resources/test-data.log", "testUpload/test-data-public.log", Option(true)))
         println("upload public with expiry url", azureService.upload(storageContainer, "src/test/resources/test-data.log", "testUpload/test-data-with-expiry.log", Option(true), Option(false), Option(600)))
         println("signed path to upload from external client", azureService.getSignedURL(storageContainer, "testUpload/test-data-public1.log", Option(600), Option("w")))
