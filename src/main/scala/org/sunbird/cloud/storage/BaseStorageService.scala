@@ -265,7 +265,7 @@ trait BaseStorageService extends IStorageService {
     }
 
     override def getUri(container: String, _prefix: String, isDirectory: Option[Boolean] = Option(false)): String = {
-        val keys = listObjectKeys(container, _prefix, isDirectory);
+        val keys = listObjectKeys(container, _prefix);
         if (keys.isEmpty)
             throw new StorageServiceException("The given _prefix is incorrect: " + _prefix)
         val prefix = keys.head
