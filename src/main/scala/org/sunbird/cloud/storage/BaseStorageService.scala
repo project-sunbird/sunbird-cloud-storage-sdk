@@ -10,9 +10,9 @@ import org.sunbird.cloud.storage.exception.StorageServiceException
 import org.sunbird.cloud.storage.util.{CommonUtil, JSONUtils}
 
 import collection.JavaConverters._
-import org.jclouds.blobstore.options.ListContainerOptions.Builder.{prefix, afterMarker, recursive}
+import org.jclouds.blobstore.options.ListContainerOptions.Builder.{afterMarker, prefix, recursive}
 import org.sunbird.cloud.storage.Model.Blob
-import org.jclouds.blobstore.options.CopyOptions
+import org.jclouds.blobstore.options.{CopyOptions, PutOptions}
 import org.sunbird.cloud.storage.conf.AppConf
 
 import scala.collection.mutable.ListBuffer
@@ -61,7 +61,7 @@ trait BaseStorageService extends IStorageService {
                 val payload = Files.asByteSource(fileObj)
                 val  contentType = tika.detect(fileObj)
                 val blob = blobStore.blobBuilder(objectKey).payload(payload).contentType(contentType).contentLength(payload.size()).build()
-                blobStore.putBlob(container, blob)
+                blobStore.putBlob(container, blob, new PutOptions().multipart())
                 if (isPublic.get) {
                     getSignedURL(container, objectKey, Option(ttl.getOrElse(maxSignedurlTTL)))
                 }
@@ -93,7 +93,7 @@ trait BaseStorageService extends IStorageService {
 
             blobStore.createContainerInLocation(null, container)
             val blob = blobStore.blobBuilder(objectKey).payload(content).contentLength(content.length).build()
-            blobStore.putBlob(container, blob)
+            blobStore.putBlob(container, blob, new PutOptions().multipart())
             if(isPublic.get) {
                 getSignedURL(container, objectKey, Option(ttl.getOrElse(maxSignedurlTTL)))
             }
