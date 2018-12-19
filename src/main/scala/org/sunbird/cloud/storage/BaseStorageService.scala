@@ -38,7 +38,7 @@ trait BaseStorageService extends IStorageService {
         }
     }
 
-    override def upload(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), isDirectory: Option[Boolean] = Option(false), ttl: Option[Int] = None, retryCount: Option[Int] = None): String = {
+    override def upload(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), isDirectory: Option[Boolean] = Option(false), ttl: Option[Int] = None, retryCount: Option[Int] = None, attempt: Int = 1): String = {
 
         try {
             if(isDirectory.get) {
@@ -46,12 +46,12 @@ trait BaseStorageService extends IStorageService {
                 val files = filesList(d)
                 val list = files.map {f =>
                     val key = objectKey + f.getAbsolutePath.split(d.getAbsolutePath + File.separator).last
-                    upload(container, f.getAbsolutePath, key)
+                    upload(container, f.getAbsolutePath, key, isPublic, Option(false), ttl, retryCount, attempt)
                 }
                 list.toString()
             }
             else {
-                if (attempt == retryCount.getOrElse(maxRetries)) {
+                if (attempt >= retryCount.getOrElse(maxRetries)) {
                     val message = s"Failed to upload. file: $file, key: $objectKey, attempt: $attempt, maxAttempts: $retryCount. Exceeded maximum number of retries"
                     throw new StorageServiceException(message)
                 }
@@ -70,9 +70,14 @@ trait BaseStorageService extends IStorageService {
         }
         catch {
             case e: Exception => {
+                e.printStackTrace()
                 Thread.sleep(attempt*2000)
-                attempt += 1
-                upload(container, file, objectKey, isPublic, isDirectory, ttl, retryCount)
+                val uploadAttempt = attempt + 1
+                if (uploadAttempt <= retryCount.getOrElse(maxRetries)) {
+                    upload(container, file, objectKey, isPublic, isDirectory, ttl, retryCount, uploadAttempt)
+                } else {
+                    throw e;
+                }
             }
         }
     }
