@@ -21,7 +21,7 @@ trait BaseStorageService extends IStorageService {
 
     var context: BlobStoreContext
     var blobStore: BlobStore
-    var maxRetries: Int = 1
+    var maxRetries: Int = 2
     var maxSignedurlTTL: Int = 604800
     var attempt = 0
     var maxContentLength = 0
