@@ -17,13 +17,11 @@ node('build-slave') {
                 sh """
                         mkdir cloud_storage_sdk_artifacts
                         cp target/sunbird-cloud-store-sdk-1.0.jar cloud_storage_sdk_artifacts
-                        zip -r cloud_storage_sdk_artifacts.zip:${artifact_version} cloud_storage_sdk_artifacts
-                        rm -rf cloud_storage_sdk_artifacts
+                        zip -j cloud_storage_sdk_artifacts.zip:${artifact_version} cloud_storage_sdk_artifacts
                     """
                 archiveArtifacts artifacts: "cloud_storage_sdk_artifacts.zip:${artifact_version}", fingerprint: true, onlyIfSuccessful: true
                 sh """echo {\\"artifact_name\\" : \\"cloud_storage_sdk_artifacts.zip\\", \\"artifact_version\\" : \\"${artifact_version}\\", \\"node_name\\" : \\"${env.NODE_NAME}\\"} > metadata.json"""
                 archiveArtifacts artifacts: 'metadata.json', onlyIfSuccessful: true
-                sh "rm cloud_storage_sdk_artifacts.zip:${artifact_version}"
             }
         }
     }
