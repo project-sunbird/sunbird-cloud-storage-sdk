@@ -10,16 +10,18 @@ import org.sunbird.cloud.storage.exception.StorageServiceException
 import org.sunbird.cloud.storage.util.{CommonUtil, JSONUtils}
 
 import collection.JavaConverters._
-import org.jclouds.blobstore.options.ListContainerOptions.Builder.prefix
+import org.jclouds.blobstore.options.ListContainerOptions.Builder.{afterMarker, prefix, recursive}
 import org.sunbird.cloud.storage.Model.Blob
-import org.jclouds.blobstore.options.CopyOptions
+import org.jclouds.blobstore.options.{CopyOptions, PutOptions}
 import org.sunbird.cloud.storage.conf.AppConf
+
+import scala.collection.mutable.ListBuffer
 
 trait BaseStorageService extends IStorageService {
 
     var context: BlobStoreContext
     var blobStore: BlobStore
-    var maxRetries: Int = 1
+    var maxRetries: Int = 2
     var maxSignedurlTTL: Int = 604800
     var attempt = 0
     var maxContentLength = 0
@@ -36,7 +38,7 @@ trait BaseStorageService extends IStorageService {
         }
     }
 
-    override def upload(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), isDirectory: Option[Boolean] = Option(false), ttl: Option[Int] = None, retryCount: Option[Int] = None): String = {
+    override def upload(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), isDirectory: Option[Boolean] = Option(false), ttl: Option[Int] = None, retryCount: Option[Int] = None, attempt: Int = 1): String = {
 
         try {
             if(isDirectory.get) {
@@ -44,12 +46,12 @@ trait BaseStorageService extends IStorageService {
                 val files = filesList(d)
                 val list = files.map {f =>
                     val key = objectKey + f.getAbsolutePath.split(d.getAbsolutePath + File.separator).last
-                    upload(container, f.getAbsolutePath, key)
+                    upload(container, f.getAbsolutePath, key, isPublic, Option(false), ttl, retryCount, attempt)
                 }
                 list.toString()
             }
             else {
-                if (attempt == retryCount.getOrElse(maxRetries)) {
+                if (attempt >= retryCount.getOrElse(maxRetries)) {
                     val message = s"Failed to upload. file: $file, key: $objectKey, attempt: $attempt, maxAttempts: $retryCount. Exceeded maximum number of retries"
                     throw new StorageServiceException(message)
                 }
@@ -59,7 +61,7 @@ trait BaseStorageService extends IStorageService {
                 val payload = Files.asByteSource(fileObj)
                 val  contentType = tika.detect(fileObj)
                 val blob = blobStore.blobBuilder(objectKey).payload(payload).contentType(contentType).contentLength(payload.size()).build()
-                blobStore.putBlob(container, blob)
+                blobStore.putBlob(container, blob, new PutOptions().multipart())
                 if (isPublic.get) {
                     getSignedURL(container, objectKey, Option(ttl.getOrElse(maxSignedurlTTL)))
                 }
@@ -68,9 +70,14 @@ trait BaseStorageService extends IStorageService {
         }
         catch {
             case e: Exception => {
+                e.printStackTrace()
                 Thread.sleep(attempt*2000)
-                attempt += 1
-                upload(container, file, objectKey, isPublic, isDirectory, ttl, retryCount)
+                val uploadAttempt = attempt + 1
+                if (uploadAttempt <= retryCount.getOrElse(maxRetries)) {
+                    upload(container, file, objectKey, isPublic, isDirectory, ttl, retryCount, uploadAttempt)
+                } else {
+                    throw e;
+                }
             }
         }
     }
@@ -86,7 +93,7 @@ trait BaseStorageService extends IStorageService {
 
             blobStore.createContainerInLocation(null, container)
             val blob = blobStore.blobBuilder(objectKey).payload(content).contentLength(content.length).build()
-            blobStore.putBlob(container, blob)
+            blobStore.putBlob(container, blob, new PutOptions().multipart())
             if(isPublic.get) {
                 getSignedURL(container, objectKey, Option(ttl.getOrElse(maxSignedurlTTL)))
             }
@@ -112,7 +119,7 @@ trait BaseStorageService extends IStorageService {
     override def download(container: String, objectKey: String, localPath: String, isDirectory: Option[Boolean] = Option(false)) = {
         try {
             if(isDirectory.get) {
-                val objects = listObjectKeys(container, objectKey, isDirectory)
+                val objects = listObjectKeys(container, objectKey)
                 for (obj <- objects) {
                     val file = FilenameUtils.getName(obj);
                     val fileObj = blobStore.getBlob(container, obj)
@@ -183,21 +190,27 @@ trait BaseStorageService extends IStorageService {
         }
     }
 
-    override def listObjectKeys(container: String, _prefix: String, isDirectory: Option[Boolean] = Option(false)): List[String] = {
-        if(isDirectory.get)
-            blobStore.list(container, prefix(_prefix).recursive()).asScala.map(f => f.getName).toList
-        else
-            blobStore.list(container, prefix(_prefix)).asScala.map(f => f.getName).toList
+    override def listObjectKeys(container: String, _prefix: String): List[String] = {
+        val fileNames = ListBuffer[String]()
+        val containerOpts = recursive().prefix(_prefix)
+        var marker: Option[String] = None
+        do {
+            if (marker.exists(_.trim.nonEmpty)) containerOpts.afterMarker(marker.getOrElse(""))
+            val pageSet = blobStore.list(container, containerOpts)
+            fileNames ++= pageSet.asScala.map(f => f.getName).toList
+            marker = Option(pageSet.getNextMarker)
+        } while (marker.isDefined)
+        fileNames.toList
     }
 
     override def searchObjects(container: String, prefix: String, fromDate: Option[String] = None, toDate: Option[String] = None, delta: Option[Int] = None, pattern: String = "yyyy-MM-dd"): List[Blob] = {
         val from = if (delta.nonEmpty) CommonUtil.getStartDate(toDate, delta.get) else fromDate;
         if (from.nonEmpty) {
-            val dates = CommonUtil.getDatesBetween(from.get, toDate, pattern);
+            val dates = CommonUtil.getDatesBetween(from.get, toDate, pattern)
             val paths = for (date <- dates) yield {
                 listObjects(container, prefix + date)
             }
-            paths.flatMap { x => x.map { x => x } }.toList;
+            paths.flatMap { x => x.map { x => x } }.toList
         } else {
             listObjects(container, prefix)
         }
@@ -212,7 +225,7 @@ trait BaseStorageService extends IStorageService {
             val paths = for (date <- dates) yield {
                 listObjectKeys(container, prefix + date)
             }
-            paths.flatMap { x => x.map { x => x } }.toList;
+            paths.flatMap { x => x.map { x => x } }.toList
         } else {
             listObjectKeys(container, prefix)
         }
@@ -222,7 +235,7 @@ trait BaseStorageService extends IStorageService {
         if(isDirectory.get) {
             val updatedFromKey = if(fromKey.endsWith("/")) fromKey else fromKey+"/"
             val updatedToKey = if(toKey.endsWith("/")) toKey else toKey+"/"
-            val objectKeys = listObjectKeys(fromContainer, updatedFromKey, isDirectory)
+            val objectKeys = listObjectKeys(fromContainer, updatedFromKey)
             for (obj <- objectKeys) {
                 val objName = obj.replace(updatedFromKey, "")
                 blobStore.copyBlob(fromContainer, obj, toContainer, updatedToKey+objName, CopyOptions.NONE)
@@ -257,7 +270,7 @@ trait BaseStorageService extends IStorageService {
     }
 
     override def getUri(container: String, _prefix: String, isDirectory: Option[Boolean] = Option(false)): String = {
-        val keys = listObjectKeys(container, _prefix, isDirectory);
+        val keys = listObjectKeys(container, _prefix);
         if (keys.isEmpty)
             throw new StorageServiceException("The given _prefix is incorrect: " + _prefix)
         val prefix = keys.head

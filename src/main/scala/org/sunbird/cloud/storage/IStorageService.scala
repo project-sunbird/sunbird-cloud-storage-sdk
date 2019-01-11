@@ -18,7 +18,7 @@ trait IStorageService {
      * @return String - The url of the file/folder uploaded
      */
     def upload(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), isDirectory: Option[Boolean] = Option(false), 
-            ttl: Option[Int] = None, retryCount: Option[Int] = None): String
+            ttl: Option[Int] = None, retryCount: Option[Int] = None, attempt: Int = 1): String
         
     /**
      * Put a blob in the cloud with the given content data. The difference between this and <code>upload()</code> method is that this method takes in byte array and sets is payload for the object.
@@ -126,7 +126,7 @@ trait IStorageService {
      * 
      * @return List[Blob] - The blob objects for the given prefix.
      */
-    def listObjectKeys(container: String, _prefix: String, isDirectory: Option[Boolean] = Option(false)): List[String]
+    def listObjectKeys(container: String, _prefix: String): List[String]
 
     /**
      * Search for objects for a given prefix and return only keys. Specifically used for telemetry files as the files are prefixed by sync date. 
