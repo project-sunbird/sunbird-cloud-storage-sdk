@@ -16,6 +16,7 @@ import org.jclouds.blobstore.options.{CopyOptions, PutOptions}
 import org.sunbird.cloud.storage.conf.AppConf
 
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.{ExecutionContext, Future}
 
 trait BaseStorageService extends IStorageService {
 
@@ -36,6 +37,17 @@ trait BaseStorageService extends IStorageService {
         } else {
             List[File]();
         }
+    }
+
+    override def uploadFolder(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), ttl: Option[Int] = None, retryCount: Option[Int] = None, attempt: Int = 1) : List[Future[String]] = {
+        val d = new File(file)
+        val files = filesList(d)
+        files.map {f =>
+            Future {
+                val key = objectKey + f.getAbsolutePath.split(d.getAbsolutePath + File.separator).last
+                upload(container, f.getAbsolutePath, key, isPublic, Option(false), ttl, retryCount, attempt)
+            } (ExecutionContext.global);
+        };
     }
 
     override def upload(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), isDirectory: Option[Boolean] = Option(false), ttl: Option[Int] = None, retryCount: Option[Int] = None, attempt: Int = 1): String = {
