@@ -39,19 +39,19 @@ trait BaseStorageService extends IStorageService {
         }
     }
 
-    override def uploadFolder(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), ttl: Option[Int] = None, retryCount: Option[Int] = None, attempt: Int = 1) : List[Future[String]] = {
+    override def uploadFolder(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), ttl: Option[Int] = None, retryCount: Option[Int] = None, attempt: Int = 1) (implicit execution: ExecutionContext) : Future[List[String]] = {
         val d = new File(file)
         val files = filesList(d)
-        files.map {f =>
+        val futures = files.map {f =>
             Future {
                 val key = objectKey + f.getAbsolutePath.split(d.getAbsolutePath + File.separator).last
                 upload(container, f.getAbsolutePath, key, isPublic, Option(false), ttl, retryCount, attempt)
-            } (ExecutionContext.global);
+            }
         };
+        Future.sequence(futures);
     }
 
     override def upload(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), isDirectory: Option[Boolean] = Option(false), ttl: Option[Int] = None, retryCount: Option[Int] = None, attempt: Int = 1): String = {
-
         try {
             if(isDirectory.get) {
                 val d = new File(file)

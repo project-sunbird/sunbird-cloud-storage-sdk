@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.sunbird</groupId>
     <artifactId>cloud-store-sdk</artifactId>
-    <version>1.2.1</version>
+    <version>1.2.2</version>
     <packaging>jar</packaging>
     <name>Cloud Store SDK</name>
     <description>cloud-store-sdk provides client APIs to handle cloud store (AWS S3, Azure Blobstore).</description>
@@ -45,7 +45,7 @@
     	<url>https://github.com/project-sunbird/sunbird-cloud-storage-sdk/tree/master</url>
    </scm>
     <dependencies>
-    		<dependency>
+    	<dependency>
 			<groupId>org.scala-lang</groupId>
 			<artifactId>scala-library</artifactId>
 			<version>${scala.version}</version>

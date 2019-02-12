@@ -2,11 +2,11 @@ package org.sunbird.cloud.storage
 
 import org.sunbird.cloud.storage.Model.Blob
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 trait IStorageService {
 
-    def uploadFolder(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), ttl: Option[Int] = None, retryCount: Option[Int] = None, attempt: Int = 1) : List[Future[String]];
+    def uploadFolder(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), ttl: Option[Int] = None, retryCount: Option[Int] = None, attempt: Int = 1)(implicit execution: ExecutionContext) : Future[List[String]];
 
     /**
      * Upload a file/folder to cloud
