@@ -77,7 +77,7 @@ trait BaseStorageService extends IStorageService {
                 if (isPublic.get) {
                     getSignedURL(container, objectKey, Option(ttl.getOrElse(maxSignedurlTTL)))
                 }
-                else blobStore.getBlob(container, objectKey).getMetadata.getUri.toString
+                else blobStore.blobMetadata(container, objectKey).getUri.toString
             }
         }
         catch {
