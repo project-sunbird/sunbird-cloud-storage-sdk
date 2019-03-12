@@ -9,20 +9,20 @@ trait IStorageService {
     def uploadFolder(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), ttl: Option[Int] = None, retryCount: Option[Int] = None, attempt: Int = 1)(implicit execution: ExecutionContext) : Future[List[String]];
 
     /**
-     * Upload a file/folder to cloud
-     * 
-     * @param container String - The container/bucket to upload the file to.
-     * @param file String - The file path.
-     * @param objectKey String - The destination key/path to upload the file to. If the path exists it will be overwritten.
-     * @param isPublic Option[Boolean] - Whether the file should have public read access? Optional and defaults to false.
-     * @param isDirectory Option[Boolean] - Whether the file is a directory and need to upload folder recursively?
-     * @param ttl Option[Int] - The ttl/expiry for the file. Optional and default is never expires
-     * @param retryCount Option[Int] - Number of times the upload will be retried before failing. Defaults to global configuration "max.retries"
-     * 
-     * @return String - The url of the file/folder uploaded
-     */
-    def upload(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), isDirectory: Option[Boolean] = Option(false), 
-            ttl: Option[Int] = None, retryCount: Option[Int] = None, attempt: Int = 1): String
+      *
+      * Upload a file/folder to cloud
+      *
+      * @param container String - The container/bucket to upload the file to.
+      * @param file String - The file path.
+      * @param objectKey String - The destination key/path to upload the file to. If the path exists it will be overwritten.
+      * @param isDirectory Option[Boolean] - Whether the file is a directory and need to upload folder recursively?
+      * @param attempt
+      * @param retryCount Option[Int] - Number of times the upload will be retried before failing. Defaults to global configuration "max.retries"
+      * @param ttl Option[Int] - The ttl/expiry for the file. Optional and default is never expires
+      * @return String - The url of the file/folder uploaded
+      */
+    def upload(container: String, file: String, objectKey: String, isDirectory: Option[Boolean] = Option(false),  attempt: Option[Int] = Option(1), retryCount: Option[Int] = None, ttl: Option[Int] = None): String
+
         
     /**
      * Put a blob in the cloud with the given content data. The difference between this and <code>upload()</code> method is that this method takes in byte array and sets is payload for the object.

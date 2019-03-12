@@ -17,7 +17,7 @@ class TestS3StorageService extends FlatSpec with Matchers {
         //println(s3Service.upload(storageContainer, "src/test/resources/110Mb_File.zip", "testUpload/110Mb_File.zip", Option(false),Option(false),None, Option(3), 1))
         val caught =
             intercept[StorageServiceException]{
-                s3Service.upload(storageContainer, "src/test/resources/1234/test-blob.log", "testUpload/1234/", Option(false), Option(false),None,Option(2),5)
+                s3Service.upload(storageContainer, "src/test/resources/1234/test-blob.log", "testUpload/1234/", Option(false),Option(5), Option(2), None)
             }
         assert(caught.getMessage.contains("Failed to upload."))
         /*

@@ -14,11 +14,11 @@ class TestAzureStorageService extends FlatSpec with Matchers {
 
         val storageContainer = AppConf.getConfig("azure_storage_container")
 
-        azureService.upload(storageContainer, "src/test/resources/test-data.log", "testUpload/test-blob.log", Option(false), Option(false),None,Option(2),1)
+        azureService.upload(storageContainer, "src/test/resources/test-data.log", "testUpload/test-blob.log", Option(false), Option(1), Option(2), None)
        // azureService.download(storageContainer, "testUpload/test-blob.log", "src/test/resources/test-azure/")
 
         // upload directory
-        println("url of folder", azureService.upload(storageContainer, "src/test/resources/1234/", "testUpload/1234/", Option(false), Option(true),None,Option(2),1))
+        println("url of folder", azureService.upload(storageContainer, "src/test/resources/1234/", "testUpload/1234/", Option(true), Option(1), Option(2), None))
 
         // downlaod directory
         azureService.download(storageContainer, "testUpload/1234/", "src/test/resources/test-azure/", Option(true))
@@ -61,7 +61,7 @@ class TestAzureStorageService extends FlatSpec with Matchers {
 
         val caught =
             intercept[StorageServiceException]{
-                azureService.upload(storageContainer, "src/test/resources/1234/test-blob.log", "testUpload/1234/", Option(false), Option(false),None,Option(2),5)
+                azureService.upload(storageContainer, "src/test/resources/1234/test-blob.log", "testUpload/1234/", Option(false), Option(5),Option(2), None)
             }
         assert(caught.getMessage.contains("Failed to upload."))
 
