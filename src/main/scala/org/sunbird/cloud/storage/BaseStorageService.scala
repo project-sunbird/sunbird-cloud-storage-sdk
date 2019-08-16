@@ -16,6 +16,7 @@ import org.jclouds.blobstore.options.{CopyOptions, PutOptions}
 import org.sunbird.cloud.storage.conf.AppConf
 
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.{ExecutionContext, Future}
 
 trait BaseStorageService extends IStorageService {
 
@@ -38,20 +39,31 @@ trait BaseStorageService extends IStorageService {
         }
     }
 
-    override def upload(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), isDirectory: Option[Boolean] = Option(false), ttl: Option[Int] = None, retryCount: Option[Int] = None, attempt: Int = 1): String = {
+    override def uploadFolder(container: String, file: String, objectKey: String, isPublic: Option[Boolean] = Option(false), ttl: Option[Int] = None, retryCount: Option[Int] = None, attempt: Int = 1) (implicit execution: ExecutionContext) : Future[List[String]] = {
+        val d = new File(file)
+        val files = filesList(d)
+        val futures = files.map {f =>
+            Future {
+                val key = objectKey + f.getAbsolutePath.split(d.getAbsolutePath + File.separator).last
+                upload(container, f.getAbsolutePath, key, Option(false), Option(attempt), retryCount, ttl)
+            }
+        };
+        Future.sequence(futures);
+    }
 
+    override def upload(container: String, file: String, objectKey: String, isDirectory: Option[Boolean] = Option(false), attempt: Option[Int] = Option(1), retryCount: Option[Int] = None, ttl: Option[Int] = None): String = {
         try {
             if(isDirectory.get) {
                 val d = new File(file)
                 val files = filesList(d)
                 val list = files.map {f =>
                     val key = objectKey + f.getAbsolutePath.split(d.getAbsolutePath + File.separator).last
-                    upload(container, f.getAbsolutePath, key, isPublic, Option(false), ttl, retryCount, attempt)
+                    upload(container, f.getAbsolutePath, key, Option(false), attempt, ttl, retryCount)
                 }
                 list.toString()
             }
             else {
-                if (attempt >= retryCount.getOrElse(maxRetries)) {
+                if (attempt.getOrElse(1) >= retryCount.getOrElse(maxRetries)) {
                     val message = s"Failed to upload. file: $file, key: $objectKey, attempt: $attempt, maxAttempts: $retryCount. Exceeded maximum number of retries"
                     throw new StorageServiceException(message)
                 }
@@ -62,19 +74,19 @@ trait BaseStorageService extends IStorageService {
                 val  contentType = tika.detect(fileObj)
                 val blob = blobStore.blobBuilder(objectKey).payload(payload).contentType(contentType).contentEncoding("UTF-8").contentLength(payload.size()).build()
                 blobStore.putBlob(container, blob, new PutOptions().multipart())
-                if (isPublic.get) {
-                    getSignedURL(container, objectKey, Option(ttl.getOrElse(maxSignedurlTTL)))
-                }
-                else blobStore.getBlob(container, objectKey).getMetadata.getUri.toString
+                if (ttl.isDefined) {
+                    getSignedURL(container, objectKey, Option(ttl.get))
+                } else
+                    blobStore.blobMetadata(container, objectKey).getUri.toString
             }
         }
         catch {
             case e: Exception => {
                 e.printStackTrace()
-                Thread.sleep(attempt*2000)
-                val uploadAttempt = attempt + 1
+                Thread.sleep(attempt.getOrElse(1)*2000)
+                val uploadAttempt = attempt.getOrElse(1) + 1
                 if (uploadAttempt <= retryCount.getOrElse(maxRetries)) {
-                    upload(container, file, objectKey, isPublic, isDirectory, ttl, retryCount, uploadAttempt)
+                    upload(container, file, objectKey, isDirectory, Option(uploadAttempt), retryCount, ttl)
                 } else {
                     throw e;
                 }
@@ -250,7 +262,7 @@ trait BaseStorageService extends IStorageService {
             download(container, objectKey, localPath, Option(false))
             val localFolder = localPath + "/" + toKey.split("/").last
             CommonUtil.unZip(localPath + "/" + objectKey.split("/").last, localFolder)
-            upload(container, localFolder, toKey, None, Option(true))
+            upload(container, localFolder, toKey, Option(true))
         }
         catch {
             case e: Exception =>
