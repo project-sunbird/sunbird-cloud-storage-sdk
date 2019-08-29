@@ -75,7 +75,7 @@ trait BaseStorageService extends IStorageService {
                 val blob = blobStore.blobBuilder(objectKey).payload(payload).contentType(contentType).contentEncoding("UTF-8").contentLength(payload.size()).build()
                 blobStore.putBlob(container, blob, new PutOptions().multipart())
                 if (ttl.isDefined) {
-                    getSignedURL(container, objectKey, Option(ttl.get))
+                        getSignedURL(container, objectKey, Option(ttl.get))
                 } else
                     blobStore.blobMetadata(container, objectKey).getUri.toString
             }
