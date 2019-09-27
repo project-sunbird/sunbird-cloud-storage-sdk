@@ -60,7 +60,7 @@ trait BaseStorageService extends IStorageService {
                     val key = objectKey + f.getAbsolutePath.split(d.getAbsolutePath + File.separator).last
                     upload(container, f.getAbsolutePath, key, Option(false), attempt, retryCount, ttl)
                 }
-                list.toString()
+                list.mkString(",")
             }
             else {
                 if (attempt.getOrElse(1) >= retryCount.getOrElse(maxRetries)) {
