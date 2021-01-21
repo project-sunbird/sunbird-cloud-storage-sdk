@@ -1,0 +1,21 @@
+version: 2.1
+jobs:
+  cloud-storage-build:
+    machine: true
+    steps:
+      - checkout
+      - restore_cache:
+          key: cloud-storage-dependency-cache-{{ checksum "pom.xml" }}
+      - run:
+          name: Build
+          command: mvn clean install -DskipTests=true
+
+      - save_cache:
+          key: cloud-storage-dependency-cache-{{ checksum "pom.xml" }}
+          paths: ~/.m2
+
+workflows:
+  version: 2.1
+  workflow:
+    jobs:
+      - cloud-storage-build
