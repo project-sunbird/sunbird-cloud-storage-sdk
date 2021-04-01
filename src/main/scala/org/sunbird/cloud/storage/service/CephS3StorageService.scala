@@ -15,5 +15,5 @@ class CephS3StorageService(config: StorageConfig) extends BaseStorageService {
 
     override def getPaths(container: String, objects: List[Blob]): List[String] = {
         objects.map{f => "s3n://" + container + "/" + f.key}
-    }
+    } 
 }
