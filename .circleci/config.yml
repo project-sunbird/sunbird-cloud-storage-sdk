@@ -8,15 +8,6 @@ jobs:
       - restore_cache:
           key: cloud-storage-dependency-cache-{{ checksum "pom.xml" }}
       - run:
-          name: Set java 8
-          command: |
-            export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64
-            export PATH=$JAVA_HOME/bin:$PATH
-            java -version
-      - run:
-          name: Check Java Version
-          command: java -version
-      - run:
           name: Build
           command: |
             export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64
