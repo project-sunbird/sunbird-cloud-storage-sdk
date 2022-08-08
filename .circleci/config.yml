@@ -10,7 +10,7 @@ jobs:
       - run:
           name: Build
           command: |
-            java -version
+            echo $(java -version)
             mvn scoverage:report
       - save_cache:
           key: cloud-storage-dependency-cache-{{ checksum "pom.xml" }}
