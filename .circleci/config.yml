@@ -12,12 +12,16 @@ jobs:
           command: |
             export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64
             export PATH=$JAVA_HOME/bin:$PATH
+            java -version
       - run:
           name: Check Java Version
           command: java -version
       - run:
           name: Build
-          command: mvn scoverage:report
+          command: |
+            export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64
+            export PATH=$JAVA_HOME/bin:$PATH
+            mvn scoverage:report
       - save_cache:
           key: cloud-storage-dependency-cache-{{ checksum "pom.xml" }}
           paths: ~/.m2
