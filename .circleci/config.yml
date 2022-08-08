@@ -9,7 +9,9 @@ jobs:
           key: cloud-storage-dependency-cache-{{ checksum "pom.xml" }}
       - run:
           name: Build
-          command: mvn scoverage:report
+          command: |
+            java -version
+            mvn scoverage:report
       - save_cache:
           key: cloud-storage-dependency-cache-{{ checksum "pom.xml" }}
           paths: ~/.m2
