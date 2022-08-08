@@ -1,8 +1,7 @@
 version: 2.1
 jobs:
   cloud-storage-build:
-    machine:
-      image: ubuntu-2004:202201-02
+    machine: true
     steps:
       - checkout
       - restore_cache:
