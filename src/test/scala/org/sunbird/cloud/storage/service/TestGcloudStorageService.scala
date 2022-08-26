@@ -40,7 +40,7 @@ class TestGcloudStorageService extends FlatSpec with Matchers {
 //    val objData = gsService.getObjectData(storageContainer, "testUpload/test-blob.log")
 //    objData.length should be(18)
 
-//    println("signed path to upload from external client", gsService.getSignedURL(storageContainer, "testUpload/test-data-public1.log", Option(600), Option("w")))
+//    println("signed path to upload from external client", gsService.getPutSignedURL(storageContainer, "testUpload/test-data-public1.log", Option(600), Option("w"), Option("text/plain")))
 
 //    gsService.copyObjects(storageContainer, "testUpload/1234/", storageContainer, "testDuplicate/1234/", Option(true))
 //    gsService.extractArchive(storageContainer, "testUpload/test-extract.zip", "testUpload/test-extract/")
@@ -52,11 +52,17 @@ class TestGcloudStorageService extends FlatSpec with Matchers {
 //    gsService.deleteObject(storageContainer, "testDuplicate/", Option(true))
 //    gsService.deleteObject(storageContainer, "testUpload/test-extract/", Option(true))
 
-    val caught =
+    val caught1 =
+      intercept[StorageServiceException]{
+        gsService.getSignedURL(storageContainer, "testUpload/test-data-public1.log", Option(600), Option("w"))
+      }
+    assert(caught1.getMessage.contains("getSignedURL method is not supported for GCP. Please use getPutSignedURL with contentType."))
+
+    val caught2 =
       intercept[StorageServiceException]{
         gsService.upload(storageContainer, "src/test/resources/1234/test-blob.log", "testUpload/1234/", Option(false), Option(5),Option(2), None)
       }
-    assert(caught.getMessage.contains("Failed to upload."))
+    assert(caught2.getMessage.contains("Failed to upload."))
 
     gsService.closeContext()
   }
