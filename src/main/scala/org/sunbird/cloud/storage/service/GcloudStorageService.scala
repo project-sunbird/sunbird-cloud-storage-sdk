@@ -44,9 +44,10 @@ class GcloudStorageService(config: StorageConfig) extends BaseStorageService  {
         val blob = blobStore.blobBuilder(objectKey).payload(payload).contentType(contentType).contentEncoding("UTF-8").contentLength(payload.size()).build()
         blobStore.putBlob(container, blob)
         if (ttl.isDefined) {
-          getSignedURL(container, objectKey, Option(ttl.get))
-        } else
-          blobStore.blobMetadata(container, objectKey).getUri.toString
+          getPutSignedURL(container, objectKey, Option(ttl.get), None, Option(contentType))
+        } else {
+          blobStore.blobMetadata(container, objectKey).getPublicUri.toString
+        }
       }
     }
     catch {
@@ -61,5 +62,23 @@ class GcloudStorageService(config: StorageConfig) extends BaseStorageService  {
         }
       }
     }
+  }
+
+  override def getUri(container: String, _prefix: String, isDirectory: Option[Boolean] = Option(false)): String = {
+    val keys = listObjectKeys(container, _prefix);
+    if (keys.isEmpty)
+      throw new StorageServiceException("The given _prefix is incorrect: " + _prefix)
+    val prefix = keys.head
+    val blob = getObject(container, prefix, Option(false))
+    val uri = blob.metadata.get("publicUri")
+    if (!uri.isEmpty) {
+      if(isDirectory.get){
+        throw new StorageServiceException("getUri for directory is not supported for GCP. The given _prefix is incorrect: " + _prefix)
+      }
+      else{
+        uri.get.asInstanceOf[String]
+      }
+    } else
+      throw new StorageServiceException("uri not available for the given prefix: "+ _prefix)
   }
 }
