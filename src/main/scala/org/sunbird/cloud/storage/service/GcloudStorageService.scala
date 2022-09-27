@@ -44,9 +44,10 @@ class GcloudStorageService(config: StorageConfig) extends BaseStorageService  {
         val blob = blobStore.blobBuilder(objectKey).payload(payload).contentType(contentType).contentEncoding("UTF-8").contentLength(payload.size()).build()
         blobStore.putBlob(container, blob)
         if (ttl.isDefined) {
-          getSignedURL(container, objectKey, Option(ttl.get))
-        } else
-          blobStore.blobMetadata(container, objectKey).getUri.toString
+          getPutSignedURL(container, objectKey, Option(ttl.get), None, Option(contentType))
+        } else {
+          blobStore.blobMetadata(container, objectKey).getPublicUri.toString
+        }
       }
     }
     catch {
