@@ -46,7 +46,9 @@ class GcloudStorageService(config: StorageConfig) extends BaseStorageService  {
         if (ttl.isDefined) {
           getPutSignedURL(container, objectKey, Option(ttl.get), None, Option(contentType))
         } else {
-          blobStore.blobMetadata(container, objectKey).getPublicUri.toString
+          val host = "https://storage.googleapis.com/"
+          val name = blobStore.blobMetadata(container, objectKey).getName
+          host + container + "/" + name
         }
       }
     }
@@ -76,7 +78,9 @@ class GcloudStorageService(config: StorageConfig) extends BaseStorageService  {
         throw new StorageServiceException("getUri for directory is not supported for GCP. The given _prefix is incorrect: " + _prefix)
       }
       else{
-        uri.get.asInstanceOf[String]
+        val host = "https://storage.googleapis.com/"
+        val name = blob.metadata.get("name").get.asInstanceOf[String]
+        host + container + "/" + name
       }
     } else
       throw new StorageServiceException("uri not available for the given prefix: "+ _prefix)
