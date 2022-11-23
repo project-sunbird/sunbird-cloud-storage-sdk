@@ -50,7 +50,7 @@ trait IStorageService {
      *
      * @return String - The pre-signed url
      */
-    def getSignedURL(container: String, objectKey: String, ttl: Option[Int] = None, permission: Option[String] = Option("r")): String
+    def getSignedURL(container: String, objectKey: String, ttl: Option[Int] = None, permission: Option[String] = Option("r"), contentType: Option[String] = Option("text/plain")): String
 
     /**
      * Download file/folder from cloud storage
