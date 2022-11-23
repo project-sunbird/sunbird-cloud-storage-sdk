@@ -75,7 +75,7 @@ trait BaseStorageService extends IStorageService {
                 val blob = blobStore.blobBuilder(objectKey).payload(payload).contentType(contentType).contentEncoding("UTF-8").contentLength(payload.size()).build()
                 blobStore.putBlob(container, blob, new PutOptions().multipart())
                 if (ttl.isDefined) {
-                    getSignedURL(container, objectKey, Option(ttl.get))
+                    getSignedURL(container, objectKey, Option(ttl.get), None, Option(contentType))
                 } else
                     blobStore.blobMetadata(container, objectKey).getUri.toString
             }
@@ -107,7 +107,8 @@ trait BaseStorageService extends IStorageService {
             val blob = blobStore.blobBuilder(objectKey).payload(content).contentLength(content.length).build()
             blobStore.putBlob(container, blob, new PutOptions().multipart())
             if(isPublic.get) {
-                getSignedURL(container, objectKey, Option(ttl.getOrElse(maxSignedurlTTL)))
+                val contentType = tika.detect(content)
+                getSignedURL(container, objectKey, Option(ttl.getOrElse(maxSignedurlTTL)), None, Option(contentType))
             }
             else blobStore.getBlob(container, objectKey).getMetadata.getUri.toString
         }
@@ -120,9 +121,10 @@ trait BaseStorageService extends IStorageService {
         }
     }
 
-    override def getSignedURL(container: String, objectKey: String, ttl: Option[Int] = None, permission: Option[String] = Option("r")): String = {
+    override def getSignedURL(container: String, objectKey: String, ttl: Option[Int] = None, permission: Option[String] = Option("r"), contentType: Option[String] = Option("text/plain")): String = {
         if (context.getBlobStore.toString.contains("google")) {
-            throw new StorageServiceException("getSignedURL method is not supported for GCP. Please use getPutSignedURL with contentType.", new Exception())
+            getPutSignedURL(container, objectKey, Option(maxSignedurlTTL), None, contentType)
+//            throw new StorageServiceException("getSignedURL method is not supported for GCP. Please use getPutSignedURL with contentType.", new Exception())
         }
         else {
             if (permission.getOrElse("").equalsIgnoreCase("w")) {
