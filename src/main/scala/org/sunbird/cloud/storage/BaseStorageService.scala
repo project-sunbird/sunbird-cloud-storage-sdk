@@ -122,7 +122,8 @@ trait BaseStorageService extends IStorageService {
 
     override def getSignedURL(container: String, objectKey: String, ttl: Option[Int] = None, permission: Option[String] = Option("r")): String = {
         if (context.getBlobStore.toString.contains("google")) {
-            throw new StorageServiceException("getSignedURL method is not supported for GCP. Please use getPutSignedURL with contentType.", new Exception())
+            getPutSignedURL(container, objectKey, ttl, permission, Option("text/plain"))
+            //throw new StorageServiceException("getSignedURL method is not supported for GCP. Please use getPutSignedURL with contentType.", new Exception())
         }
         else {
             if (permission.getOrElse("").equalsIgnoreCase("w")) {
