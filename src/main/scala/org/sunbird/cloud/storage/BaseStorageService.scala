@@ -121,10 +121,9 @@ trait BaseStorageService extends IStorageService {
         }
     }
 
-    override def getSignedURL(container: String, objectKey: String, ttl: Option[Int] = None, permission: Option[String] = Option("r"), contentType: Option[String] = Option("text/plain")): String = {
+    override def getSignedURL(container: String, objectKey: String, ttl: Option[Int] = None, permission: Option[String] = Option("r")): String = {
         if (context.getBlobStore.toString.contains("google")) {
-            getPutSignedURL(container, objectKey, Option(maxSignedurlTTL), None, contentType)
-//            throw new StorageServiceException("getSignedURL method is not supported for GCP. Please use getPutSignedURL with contentType.", new Exception())
+            throw new StorageServiceException("getSignedURL method is not supported for GCP. Please use getPutSignedURL with contentType.", new Exception())
         }
         else {
             if (permission.getOrElse("").equalsIgnoreCase("w")) {
@@ -132,6 +131,14 @@ trait BaseStorageService extends IStorageService {
             } else {
                 context.getSigner.signGetBlob(container, objectKey, ttl.getOrElse(maxSignedurlTTL)).getEndpoint.toString
             }
+        }
+    }
+
+    override def getSignedURLV2(container: String, objectKey: String, ttl: Option[Int] = None, permission: Option[String] = Option("r"), contentType: Option[String] = Option("text/plain")): String = {
+        if (context.getBlobStore.toString.contains("google")) {
+            getPutSignedURL(container, objectKey, Option(maxSignedurlTTL), None, contentType)
+        } else {
+            getSignedURL(container, objectKey, ttl, permission)
         }
     }
 
