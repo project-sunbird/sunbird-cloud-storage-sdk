@@ -52,11 +52,11 @@ class TestGcloudStorageService extends FlatSpec with Matchers {
 //    gsService.deleteObject(storageContainer, "testDuplicate/", Option(true))
 //    gsService.deleteObject(storageContainer, "testUpload/test-extract/", Option(true))
 
-//    val caught1 =
-//      intercept[StorageServiceException]{
-//        gsService.getSignedURL(storageContainer, "testUpload/test-data-public1.log", Option(600), Option("w"))
-//      }
-//    assert(caught1.getMessage.contains("getSignedURL method is not supported for GCP. Please use getPutSignedURL with contentType."))
+    val caught1 =
+      intercept[StorageServiceException]{
+        gsService.getSignedURL(storageContainer, "testUpload/test-data-public1.log", Option(600), Option("w"))
+      }
+    assert(caught1.getMessage.contains("getSignedURL method is not supported for GCP. Please use getPutSignedURL with contentType."))
 
     val caught2 =
       intercept[StorageServiceException]{
