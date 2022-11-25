@@ -107,7 +107,6 @@ trait BaseStorageService extends IStorageService {
             val blob = blobStore.blobBuilder(objectKey).payload(content).contentLength(content.length).build()
             blobStore.putBlob(container, blob, new PutOptions().multipart())
             if(isPublic.get) {
-                val contentType = tika.detect(content)
                 getSignedURL(container, objectKey, Option(ttl.getOrElse(maxSignedurlTTL)))
             }
             else blobStore.getBlob(container, objectKey).getMetadata.getUri.toString
