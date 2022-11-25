@@ -75,7 +75,7 @@ trait BaseStorageService extends IStorageService {
                 val blob = blobStore.blobBuilder(objectKey).payload(payload).contentType(contentType).contentEncoding("UTF-8").contentLength(payload.size()).build()
                 blobStore.putBlob(container, blob, new PutOptions().multipart())
                 if (ttl.isDefined) {
-                    getSignedURLV2(container, objectKey, Option(ttl.get), None, Option(contentType))
+                    getSignedURL(container, objectKey, Option(ttl.get))
                 } else
                     blobStore.blobMetadata(container, objectKey).getUri.toString
             }
@@ -108,7 +108,7 @@ trait BaseStorageService extends IStorageService {
             blobStore.putBlob(container, blob, new PutOptions().multipart())
             if(isPublic.get) {
                 val contentType = tika.detect(content)
-                getSignedURLV2(container, objectKey, Option(ttl.getOrElse(maxSignedurlTTL)), None, Option(contentType))
+                getSignedURL(container, objectKey, Option(ttl.getOrElse(maxSignedurlTTL)))
             }
             else blobStore.getBlob(container, objectKey).getMetadata.getUri.toString
         }
