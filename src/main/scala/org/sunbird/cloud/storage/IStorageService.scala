@@ -53,6 +53,19 @@ trait IStorageService {
     def getSignedURL(container: String, objectKey: String, ttl: Option[Int] = None, permission: Option[String] = Option("r")): String
 
     /**
+     * Get pre-signed URL to access an object in the cloud store.
+     *
+     * @param container String - The container/bucket of the file
+     * @param objectKey String - The key/path of the file to pre-sign
+     * @param ttl Option[Int] - The ttl/expiry for the pre-signed URL. Defaults to "max.signedurl.ttl" defined in global configuration*
+     * @param permission String - The permission of pre-signed url the values are w (write), r (read). Defaults to "read".
+     * @param contentType String - The object type of the content.
+     *
+     * @return String - The pre-signed url
+     */
+    def getSignedURLV2(container: String, objectKey: String, ttl: Option[Int] = None, permission: Option[String] = Option("r"), contentType: Option[String] = Option("text/plain")): String
+
+    /**
      * Download file/folder from cloud storage
      * 
      * @param container String - The container/bucket of the file
