@@ -14,6 +14,7 @@
         <scoverage.plugin.version>1.1.1</scoverage.plugin.version>
 		<scala.maj.version>2.12</scala.maj.version>
 		<scala.version>2.12.11</scala.version>
+		<gcp.storage.version>2.16.0</gcp.storage.version>
     </properties>
     <licenses>
 		<license>
@@ -77,6 +78,11 @@
             <artifactId>hadoop-azure</artifactId>
             <version>2.7.3</version>
         </dependency>
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud-storage</artifactId>
+			<version>${gcp.storage.version}</version>
+		</dependency>
         <dependency>
             <groupId>com.typesafe</groupId>
             <artifactId>config</artifactId>
