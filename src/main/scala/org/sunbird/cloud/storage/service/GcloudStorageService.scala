@@ -50,7 +50,7 @@ class GcloudStorageService(config: StorageConfig) extends BaseStorageService  {
         val blob = blobStore.blobBuilder(objectKey).payload(payload).contentType(contentType).contentEncoding("UTF-8").contentLength(payload.size()).build()
         blobStore.putBlob(container, blob)
         if (ttl.isDefined) {
-          getPutSignedURL(container, objectKey, Option(ttl.get), None, Option(contentType))
+          getPutSignedURL(container, objectKey, Option(ttl.get), None, Option(contentType), null)
         } else {
           val host = "https://storage.googleapis.com/"
           val name = blobStore.blobMetadata(container, objectKey).getName
@@ -92,35 +92,17 @@ class GcloudStorageService(config: StorageConfig) extends BaseStorageService  {
       throw new StorageServiceException("uri not available for the given prefix: "+ _prefix)
   }
 
-  override def getSignedURLV4(container: String, objectKey: String, permission: Option[String] = Option("r"), ttl: Option[Int],
-                     contentType: Option[String], projectId: String, clientId: String,
-                     clientEmail: String, privateKeyPkcs8: String, privateKeyIds: String): String = {
-    context.getBlobStore.toString match {
-      case "google" => getPutSignedURL(container, objectKey, ttl, contentType, projectId, clientId, clientEmail, privateKeyPkcs8,  privateKeyIds)
-      case _ => ""
-    }
-  }
-
   /**
    * Method to get V4 Signed URL when storage is GCP
-   * @param container
-   * @param objectKey
-   * @param ttl
-   * @param contentType
-   * @param projectId
-   * @param clientId
-   * @param clientEmail
-   * @param privateKeyPkcs8
-   * @param privateKeyIds
+   * @param re
    * @return
    */
-  def getPutSignedURL(container: String, objectKey: String, ttl: Option[Int],
-                      contentType: Option[String], projectId: String, clientId: String,
-                      clientEmail: String, privateKeyPkcs8: String, privateKeyIds: String): String = {
+  override def getPutSignedURL(container: String, objectKey: String,  ttl: Option[Int], permission: Option[String] = Option("r"), contentType: Option[String], additionalParams: Map[String, String]): String = {
     // getting credentials
-    val credentials = ServiceAccountCredentials.fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyIds, new java.util.ArrayList[String]())
+    val credentials = ServiceAccountCredentials.fromPkcs8(additionalParams.get("clientId").get, additionalParams.get("clientEmail").get, additionalParams.get("privateKeyPkcs8").get, 
+    additionalParams.get("privateKeyIds").get, new java.util.ArrayList[String]())
     // creating storage options
-    val storage = StorageOptions.newBuilder.setProjectId(projectId).setCredentials(credentials).build.getService
+    val storage = StorageOptions.newBuilder.setProjectId(additionalParams.get("projectId").get).setCredentials(credentials).build.getService
     // setting header as application/octet-stream (required by google)
     val extensionHeaders = new java.util.HashMap().asInstanceOf[java.util.Map[String, String]]
     extensionHeaders.putAll(Map(HttpHeaders.CONTENT_TYPE -> contentType.getOrElse(MimeTypes.OCTET_STREAM)).asJava)

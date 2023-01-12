@@ -133,25 +133,17 @@ trait BaseStorageService extends IStorageService {
         }
     }
 
-    override def getSignedURLV2(container: String, objectKey: String, ttl: Option[Int] = None, permission: Option[String] = Option("r"), contentType: Option[String] = Option("text/plain")): String = {
+    override def getSignedURLV2(container: String, objectKey: String, ttl: Option[Int] = None, permission: Option[String] = Option("r"),
+     contentType: Option[String], additionalParams: Map[String, String]): String = {
         if (context.getBlobStore.toString.contains("google")) {
-            getPutSignedURL(container, objectKey, Option(maxSignedurlTTL), None, contentType)
+            getPutSignedURL(container, objectKey, Option(maxSignedurlTTL), None, contentType, additionalParams)
         } else {
             getSignedURL(container, objectKey, ttl, permission)
         }
     }
 
-    def getSignedURLV4(container: String, objectKey: String, permission: Option[String] = Option("r"), ttl: Option[Int],
-                       contentType: Option[String], projectId: String, clientId: String,
-                       clientEmail: String, privateKeyPkcs8: String, privateKeyIds: String): String = {
-        if (context.getBlobStore.toString.contains("google")) {
-            getPutSignedURL(container, objectKey, Option(maxSignedurlTTL), None, contentType)
-        } else {
-            getSignedURL(container, objectKey, ttl, permission)
-        }
-    }
-
-    def getPutSignedURL(container: String, objectKey: String, ttl: Option[Int] = None, permission: Option[String] = Option("r"), contentType: Option[String] = Option("text/plain")): String = {
+    def getPutSignedURL(container: String, objectKey: String, ttl: Option[Int] = None, permission: Option[String] = Option("r"), 
+    contentType: Option[String], additionalParams: Map[String, String]): String = {
         if (permission.getOrElse("").equalsIgnoreCase("w")) {
             context.getSigner.signPutBlob(container, blobStore.blobBuilder(objectKey).forSigning().contentLength(maxContentLength).contentType(contentType.get).build(), ttl.getOrElse(maxSignedurlTTL).asInstanceOf[Number].longValue()).getEndpoint.toString
         } else {
