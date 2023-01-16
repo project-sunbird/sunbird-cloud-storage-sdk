@@ -26,8 +26,6 @@ class OCIS3StorageService (config: StorageConfig) extends BaseStorageService {
   overrides.setProperty("jclouds.regions", "ap-hyderabad-1")
   overrides.setProperty("jclouds.s3.signer-version", "4")
 
-  val wiring = ImmutableSet.of(new S3BlobStoreContextModule());
-
   var context = ContextBuilder.newBuilder("aws-s3")
     .credentials(config.storageKey, config.storageSecret)
     .overrides(overrides)
