@@ -12,9 +12,6 @@ class TestOCIS3StorageService  extends FlatSpec with Matchers {
     val ociS3Service = StorageServiceFactory.getStorageService(storageConfig)
 
     val storageContainer = AppConf.getConfig("oci_storage_container")
-    println("Key : " + AppConf.getStorageKey("oci"))
-    println("Secret : " + AppConf.getStorageSecret("oci"))
-    println("Storage: " + storageContainer)
 
     ociS3Service.upload(storageContainer, "src/test/resources/test-data.log", "testUpload/test-blob.log")
     ociS3Service.download(storageContainer, "testUpload/test-blob.log", "src/test/resources/test-s3/")
@@ -50,8 +47,6 @@ class TestOCIS3StorageService  extends FlatSpec with Matchers {
     ociS3Service.copyObjects(storageContainer, "testUpload/test-extract.zip", storageContainer, "testDuplicate/test-extract.zip")
 
     ociS3Service.extractArchive(storageContainer, "testUpload/test-extract.zip", "testUpload/test-extract/")
-
-
   }
 
 }

@@ -23,13 +23,11 @@ class OCIS3StorageService (config: StorageConfig) extends BaseStorageService {
   overrides.setProperty("jclouds.regions", config.region.get)
   overrides.setProperty("jclouds.s3.signer-version", "4")
 
-  println("Region:" + config.region.get)
   var context = ContextBuilder.newBuilder("aws-s3")
     .credentials(config.storageKey, config.storageSecret)
     .overrides(overrides)
     .endpoint(config.endPoint.get).buildView(classOf[BlobStoreContext])
   var blobStore = context.getBlobStore
-  println("Signer: " + context.getSigner.toString)
 
   /**
    * Get HDFS compatible file paths to be used in tech stack like Spark.
