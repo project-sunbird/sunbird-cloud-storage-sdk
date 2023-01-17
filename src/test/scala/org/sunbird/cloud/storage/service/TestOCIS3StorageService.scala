@@ -15,7 +15,6 @@ class TestOCIS3StorageService  extends FlatSpec with Matchers {
     val storageContainer = AppConf.getConfig("oci_storage_container")
 
     // Use this exception block to execute the test cases successfully when it has invalid configuration.
-    println(ociS3Service.upload(storageContainer, "src/test/resources/110Mb_File.zip", "testUpload/110Mb_File.zip", Option(false)))
     val caught =
         intercept[StorageServiceException]{
           ociS3Service.upload(storageContainer, "src/test/resources/1234/test-blob.log", "testUpload/1234/", Option(false),Option(5), Option(2), None)
