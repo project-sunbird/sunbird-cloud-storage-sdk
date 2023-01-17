@@ -48,4 +48,16 @@ object AppConf {
         else if (`type`.equals("oci")) getConfig("oci_storage_secret");
         else "";
     }
+
+    def getRegion(`type`: String): Option[String] = {
+        if (`type`.equals("oci"))
+            Option(getConfig("oci_region"))
+        else Option("");
+    }
+
+    def getEndPoint(`type`: String): Option[String] = {
+        if (`type`.equals("oci"))
+            Option(getConfig("oci_storage_endpoint"))
+        else None
+    }
 }
