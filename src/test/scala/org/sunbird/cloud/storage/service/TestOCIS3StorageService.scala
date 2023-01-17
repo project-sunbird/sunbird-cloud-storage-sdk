@@ -2,6 +2,7 @@ package org.sunbird.cloud.storage.service
 
 import org.scalatest.{FlatSpec, Matchers}
 import org.sunbird.cloud.storage.conf.AppConf
+import org.sunbird.cloud.storage.exception.StorageServiceException
 import org.sunbird.cloud.storage.factory.{StorageConfig, StorageServiceFactory}
 
 class TestOCIS3StorageService  extends FlatSpec with Matchers {
@@ -13,6 +14,18 @@ class TestOCIS3StorageService  extends FlatSpec with Matchers {
 
     val storageContainer = AppConf.getConfig("oci_storage_container")
 
+    // Use this exception block to execute the test cases successfully when it has invalid configuration.
+    println(ociS3Service.upload(storageContainer, "src/test/resources/110Mb_File.zip", "testUpload/110Mb_File.zip", Option(false),Option(false),None, Option(3), 1))
+    val caught =
+        intercept[StorageServiceException]{
+          ociS3Service.upload(storageContainer, "src/test/resources/1234/test-blob.log", "testUpload/1234/", Option(false),Option(5), Option(2), None)
+        }
+    assert(caught.getMessage.contains("Failed to upload."))
+
+    /**
+     * Use the below complete block when we have the valid configuration and
+     * to test the OCI functionality.
+     */
     ociS3Service.upload(storageContainer, "src/test/resources/test-data.log", "testUpload/test-blob.log")
     ociS3Service.download(storageContainer, "testUpload/test-blob.log", "src/test/resources/test-s3/")
 
@@ -22,7 +35,7 @@ class TestOCIS3StorageService  extends FlatSpec with Matchers {
     // downlaod directory
     ociS3Service.download(storageContainer, "testUpload/1234/", "src/test/resources/test-s3/", Option(true))
 
-    println("OCIS3 signed url", ociS3Service.getSignedURL(storageContainer, "testUpload/test-blob.log", Option(600)))
+    println("OCI S3 signed url", ociS3Service.getSignedURL(storageContainer, "testUpload/test-blob.log", Option(600)))
 
     val blob = ociS3Service.getObject(storageContainer, "testUpload/test-blob.log")
     println("blob details: ", blob)
