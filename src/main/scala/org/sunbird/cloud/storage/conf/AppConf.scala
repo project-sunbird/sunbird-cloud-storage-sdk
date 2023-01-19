@@ -35,6 +35,7 @@ object AppConf {
         if (`type`.equals("aws")) getConfig("aws_storage_key");
         else if (`type`.equals("azure")) getConfig("azure_storage_key");
         else if (`type`.equals("gcloud")) getConfig("gcloud_client_key");
+        else if (`type`.equals("oci")) getConfig("oci_storage_key");
         else "";
     }
 
@@ -42,6 +43,19 @@ object AppConf {
         if (`type`.equals("aws")) getConfig("aws_storage_secret");
         else if (`type`.equals("azure")) getConfig("azure_storage_secret");
         else if (`type`.equals("gcloud")) getConfig("gcloud_private_secret");
+        else if (`type`.equals("oci")) getConfig("oci_storage_secret");
         else "";
+    }
+
+    def getRegion(`type`: String): Option[String] = {
+        if (`type`.equals("oci"))
+            Option(getConfig("oci_region"))
+        else Option("");
+    }
+
+    def getEndPoint(`type`: String): Option[String] = {
+        if (`type`.equals("oci"))
+            Option(getConfig("oci_storage_endpoint"))
+        else None
     }
 }
