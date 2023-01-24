@@ -97,9 +97,10 @@ class GcloudStorageService(config: StorageConfig) extends BaseStorageService  {
    * @param re
    * @return
    */
-  override def getPutSignedURL(container: String, objectKey: String,  ttl: Option[Int], permission: Option[String] = Option("r"), contentType: Option[String], additionalParams: Option[Map[String,String]] = None): String = {
+  override def getPutSignedURL(container: String, objectKey: String,  ttl: Option[Int], permission: Option[String] = Option("r"),
+                               contentType: Option[String] = Option("application/octet-stream"), additionalParams: Option[Map[String,String]] = None): String = {
     if(additionalParams.get == None) {
-      return null;
+      throw new StorageServiceException("Missing google credentials params.")
     }
     val properties = additionalParams.get;
     // getting credentials
@@ -108,8 +109,7 @@ class GcloudStorageService(config: StorageConfig) extends BaseStorageService  {
     // creating storage options
     val storage = StorageOptions.newBuilder.setProjectId(properties.get("projectId").get).setCredentials(credentials).build.getService
     // setting header as application/octet-stream (required by google)
-    val extensionHeaders = new java.util.HashMap().asInstanceOf[java.util.Map[String, String]]
-    extensionHeaders.putAll(Map(HttpHeaders.CONTENT_TYPE -> contentType.getOrElse(MimeTypes.OCTET_STREAM)).asJava)
+    val extensionHeaders = Map(HttpHeaders.CONTENT_TYPE -> contentType.getOrElse(MimeTypes.OCTET_STREAM))
     // creating blob info
     val blobInfo = BlobInfo.newBuilder(BlobId.of(container, objectKey)).build
     // expiry time validation as TTL cannot be greater than 604800
@@ -117,7 +117,7 @@ class GcloudStorageService(config: StorageConfig) extends BaseStorageService  {
     val expiryTime = if(ttl.get > maxSignedurlTTL) maxSignedurlTTL else ttl.get
     //creating signed url
     val url = storage.signUrl(blobInfo, expiryTime, TimeUnit.SECONDS, Storage.SignUrlOption.httpMethod(HttpMethod.PUT),
-      Storage.SignUrlOption.withExtHeaders(extensionHeaders),
+      Storage.SignUrlOption.withExtHeaders(extensionHeaders.asJava),
       Storage.SignUrlOption.withV4Signature);
     url.toString;
   }
