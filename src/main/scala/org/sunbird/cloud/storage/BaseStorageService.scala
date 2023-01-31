@@ -142,8 +142,8 @@ trait BaseStorageService extends IStorageService {
         }
     }
 
-    def getPutSignedURL(container: String, objectKey: String, ttl: Option[Int] = None, permission: Option[String] = Option("r"), 
-    contentType: Option[String], additionalParams: Option[Map[String, String]]): String = {
+    def getPutSignedURL(container: String, objectKey: String, ttl: Option[Int] = None, permission: Option[String] = Option("r"),
+                        contentType: Option[String] = Option("application/octet-stream"), additionalParams: Option[Map[String,String]] = None): String = {
         if (permission.getOrElse("").equalsIgnoreCase("w")) {
             context.getSigner.signPutBlob(container, blobStore.blobBuilder(objectKey).forSigning().contentLength(maxContentLength).contentType(contentType.get).build(), ttl.getOrElse(maxSignedurlTTL).asInstanceOf[Number].longValue()).getEndpoint.toString
         } else {
