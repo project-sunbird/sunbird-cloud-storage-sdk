@@ -1,5 +1,7 @@
 package org.sunbird.cloud.storage.service
 
+import com.google.auth.oauth2.ServiceAccountCredentials
+import com.google.cloud.storage.{BlobId, BlobInfo, HttpMethod, Storage, StorageOptions}
 import com.google.common.io.Files
 import org.jclouds.ContextBuilder
 import org.jclouds.blobstore.BlobStoreContext
@@ -7,8 +9,12 @@ import org.sunbird.cloud.storage.BaseStorageService
 import org.sunbird.cloud.storage.Model.Blob
 import org.sunbird.cloud.storage.exception.StorageServiceException
 import org.sunbird.cloud.storage.factory.StorageConfig
+import org.apache.tika.metadata.HttpHeaders
+import org.apache.tika.mime.MimeTypes
 
 import java.io.File
+import java.util.concurrent.TimeUnit
+import scala.collection.JavaConverters._
 
 class GcloudStorageService(config: StorageConfig) extends BaseStorageService  {
 
@@ -85,4 +91,35 @@ class GcloudStorageService(config: StorageConfig) extends BaseStorageService  {
     } else
       throw new StorageServiceException("uri not available for the given prefix: "+ _prefix)
   }
+
+  /**
+   * Method to get V4 Signed URL when storage is GCP
+   * @param re
+   * @return
+   */
+  override def getPutSignedURL(container: String, objectKey: String,  ttl: Option[Int], permission: Option[String] = Option("r"),
+                               contentType: Option[String] = Option("application/octet-stream"), additionalParams: Option[Map[String,String]] = None): String = {
+    if(additionalParams.get == None) {
+      throw new StorageServiceException("Missing google credentials params.")
+    }
+    val properties = additionalParams.get;
+    // getting credentials
+    val credentials = ServiceAccountCredentials.fromPkcs8(properties.get("clientId").get, properties.get("clientEmail").get, properties.get("privateKeyPkcs8").get, 
+    properties.get("privateKeyIds").get, new java.util.ArrayList[String]())
+    // creating storage options
+    val storage = StorageOptions.newBuilder.setProjectId(properties.get("projectId").get).setCredentials(credentials).build.getService
+    // setting header as application/octet-stream (required by google)
+    val extensionHeaders = Map(HttpHeaders.CONTENT_TYPE -> contentType.getOrElse(MimeTypes.OCTET_STREAM))
+    // creating blob info
+    val blobInfo = BlobInfo.newBuilder(BlobId.of(container, objectKey)).build
+    // expiry time validation as TTL cannot be greater than 604800
+    // expiry time will be set to default value of 604800 if greater than 604800
+    val expiryTime = if(ttl.get > maxSignedurlTTL) maxSignedurlTTL else ttl.get
+    //creating signed url
+    val url = storage.signUrl(blobInfo, expiryTime, TimeUnit.SECONDS, Storage.SignUrlOption.httpMethod(HttpMethod.PUT),
+      Storage.SignUrlOption.withExtHeaders(extensionHeaders.asJava),
+      Storage.SignUrlOption.withV4Signature);
+    url.toString;
+  }
+
 }
