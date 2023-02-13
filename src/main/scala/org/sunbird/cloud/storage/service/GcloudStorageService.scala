@@ -3,6 +3,7 @@ package org.sunbird.cloud.storage.service
 import com.google.auth.oauth2.ServiceAccountCredentials
 import com.google.cloud.storage.{BlobId, BlobInfo, HttpMethod, Storage, StorageOptions}
 import com.google.common.io.Files
+import org.apache.commons.lang3.StringUtils
 import org.jclouds.ContextBuilder
 import org.jclouds.blobstore.BlobStoreContext
 import org.sunbird.cloud.storage.BaseStorageService
@@ -13,6 +14,7 @@ import org.apache.tika.metadata.HttpHeaders
 import org.apache.tika.mime.MimeTypes
 
 import java.io.File
+import java.util
 import java.util.concurrent.TimeUnit
 import scala.collection.JavaConverters._
 
@@ -99,15 +101,13 @@ class GcloudStorageService(config: StorageConfig) extends BaseStorageService  {
    */
   override def getPutSignedURL(container: String, objectKey: String,  ttl: Option[Int], permission: Option[String] = Option("r"),
                                contentType: Option[String] = Option("application/octet-stream"), additionalParams: Option[Map[String,String]] = None): String = {
-    if(additionalParams.get == None) {
-      throw new StorageServiceException("Missing google credentials params.")
-    }
+    checkAdditionalParams(additionalParams)
     val properties = additionalParams.get;
     // getting credentials
-    val credentials = ServiceAccountCredentials.fromPkcs8(properties.get("clientId").get, properties.get("clientEmail").get, properties.get("privateKeyPkcs8").get, 
-    properties.get("privateKeyIds").get, new java.util.ArrayList[String]())
+    val credentials = ServiceAccountCredentials.fromPkcs8(properties.get("cloud_storage_client_id").get, config.storageKey, config.storageSecret,
+    properties.get("cloud_storage_private_key_id").get, new java.util.ArrayList[String]())
     // creating storage options
-    val storage = StorageOptions.newBuilder.setProjectId(properties.get("projectId").get).setCredentials(credentials).build.getService
+    val storage = StorageOptions.newBuilder.setProjectId(properties.get("cloud_storage_project_id").get).setCredentials(credentials).build.getService
     // setting header as application/octet-stream (required by google)
     val extensionHeaders = Map(HttpHeaders.CONTENT_TYPE -> contentType.getOrElse(MimeTypes.OCTET_STREAM))
     // creating blob info
@@ -120,6 +120,19 @@ class GcloudStorageService(config: StorageConfig) extends BaseStorageService  {
       Storage.SignUrlOption.withExtHeaders(extensionHeaders.asJava),
       Storage.SignUrlOption.withV4Signature);
     url.toString;
+  }
+  private def checkAdditionalParams(additionalParams: Option[Map[String, Object]]): Unit = {
+    if (additionalParams == None) {
+      throw new StorageServiceException("Missing google credentials additional params.")
+    } else {
+      val params = additionalParams.getOrElse(new util.HashMap[String, Object]()).asInstanceOf[Map[String, Object]]
+      if (StringUtils.isBlank(params.getOrElse("cloud_storage_client_id", "").asInstanceOf[String]))
+        throw new StorageServiceException("Missing google credentials additional params: cloud_storage_client_id.")
+      if (StringUtils.isBlank(params.getOrElse("cloud_storage_private_key_id", "").asInstanceOf[String]))
+        throw new StorageServiceException("Missing google credentials additional params: cloud_storage_private_key_id.")
+      if (StringUtils.isBlank(params.getOrElse("cloud_storage_project_id", "").asInstanceOf[String]))
+        throw new StorageServiceException("Missing google credentials additional params: cloud_storage_project_id.")
+    }
   }
 
 }
