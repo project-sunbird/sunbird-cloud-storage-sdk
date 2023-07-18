@@ -27,12 +27,12 @@ object AppConf {
     def getRegion: Option[String] = {
         if (getStorageType.equals("oci"))
             Option(getConfig("cloud_storage_region"))
-        else Option("");
+        else Option("")
     }
 
     def getEndPoint: Option[String] = {
         if (getStorageType.equals("oci"))
             Option(getConfig("cloud_storage_endpoint"))
-        else None
+        else Option("")
     }
 }
