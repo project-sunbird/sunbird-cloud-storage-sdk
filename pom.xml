@@ -2,10 +2,10 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.sunbird</groupId>
     <artifactId>cloud-store-sdk_2.12</artifactId>
-    <version>1.4.4</version>
+    <version>1.4.6</version>
     <packaging>jar</packaging>
     <name>Cloud Store SDK</name>
-    <description>cloud-store-sdk provides client APIs to handle cloud store (AWS S3, Azure Blobstore).</description>
+    <description>cloud-store-sdk provides client APIs to handle cloud store (AWS S3, Azure Blobstore, GCP, OCI).</description>
     <url>https://www.sunbird.org/</url>
     <properties>
     	<maven.compiler.source>1.7</maven.compiler.source>
