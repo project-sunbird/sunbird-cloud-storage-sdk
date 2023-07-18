@@ -15,49 +15,24 @@ object AppConf {
         else "";
     }
 
-    def getConfig(): Config = {
-        return conf;
-    }
+    def getConfig: Config = conf
 
-    def getAwsKey(): String = {
-        getConfig("aws_storage_key");
-    }
 
-    def getAwsSecret(): String = {
-        getConfig("aws_storage_secret");
-    }
+    def getStorageType: String = getConfig("cloud_storage_type")
 
-    def getStorageType(): String = {
-        getConfig("cloud_storage_type");
-    }
+    def getStorageKey: String = getConfig("cloud_storage_key")
 
-    def getStorageKey(`type`: String): String = {
-        if (`type`.equals("aws")) getConfig("aws_storage_key");
-        else if (`type`.equals("azure")) getConfig("azure_storage_key");
-        else if (`type`.equals("cephs3")) getConfig("cephs3_storage_key");
-        else if (`type`.equals("gcloud")) getConfig("gcloud_client_key");
-        else if (`type`.equals("oci")) getConfig("oci_storage_key");
-        else "";
-    }
+    def getStorageSecret: String = getConfig("cloud_storage_secret")
 
-    def getStorageSecret(`type`: String): String = {
-        if (`type`.equals("aws")) getConfig("aws_storage_secret");
-        else if (`type`.equals("azure")) getConfig("azure_storage_secret");
-        else if (`type`.equals("cephs3")) getConfig("cephs3_storage_secret");
-        else if (`type`.equals("gcloud")) getConfig("gcloud_private_secret");
-        else if (`type`.equals("oci")) getConfig("oci_storage_secret");
-        else "";
-    }
-
-    def getRegion(`type`: String): Option[String] = {
-        if (`type`.equals("oci"))
-            Option(getConfig("oci_region"))
+    def getRegion: Option[String] = {
+        if (getStorageType.equals("oci"))
+            Option(getConfig("cloud_storage_region"))
         else Option("");
     }
 
-    def getEndPoint(`type`: String): Option[String] = {
-        if (`type`.equals("oci"))
-            Option(getConfig("oci_storage_endpoint"))
+    def getEndPoint: Option[String] = {
+        if (getStorageType.equals("oci"))
+            Option(getConfig("cloud_storage_endpoint"))
         else None
     }
 }

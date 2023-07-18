@@ -9,9 +9,9 @@ class TestGcloudStorageService extends FlatSpec with Matchers {
 
   it should "test for gcloud storage" in {
 
-    val gsService = StorageServiceFactory.getStorageService(StorageConfig("gcloud", AppConf.getStorageKey("gcloud"), AppConf.getStorageSecret("gcloud")))
+    val gsService = StorageServiceFactory.getStorageService(StorageConfig("gcloud", AppConf.getStorageKey, AppConf.getStorageSecret))
 
-    val storageContainer = AppConf.getConfig("gcloud_storage_container")
+    val storageContainer = AppConf.getConfig("cloud_storage_container")
 
 //    gsService.upload(storageContainer, "src/test/resources/test-data.log", "testUpload/test-blob.log", Option(false), Option(1), Option(2), None)
 //    gsService.upload(storageContainer, "src/test/resources/test-extract.zip", "testUpload/test-extract.zip", Option(false), Option(1), Option(2), None)

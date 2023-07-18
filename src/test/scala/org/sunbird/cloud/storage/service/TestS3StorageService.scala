@@ -10,9 +10,9 @@ class TestS3StorageService extends FlatSpec with Matchers {
 
     it should "test for s3 storage" in {
 
-        val s3Service = StorageServiceFactory.getStorageService(StorageConfig("aws", AppConf.getStorageKey("aws"), AppConf.getStorageSecret("aws")))
+        val s3Service = StorageServiceFactory.getStorageService(StorageConfig("aws", AppConf.getStorageKey, AppConf.getStorageSecret))
 
-        val storageContainer = AppConf.getConfig("aws_storage_container")
+        val storageContainer = AppConf.getConfig("cloud_storage_container")
 
         //println(s3Service.upload(storageContainer, "src/test/resources/110Mb_File.zip", "testUpload/110Mb_File.zip", Option(false),Option(false),None, Option(3), 1))
         val caught =

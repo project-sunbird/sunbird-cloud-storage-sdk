@@ -9,10 +9,10 @@ class TestOCIS3StorageService  extends FlatSpec with Matchers {
 
   it should "test for OCIS3 storage" in {
 
-    val storageConfig = StorageConfig("oci", AppConf.getStorageKey("oci"), AppConf.getStorageSecret("oci"), AppConf.getEndPoint("oci"), AppConf.getRegion("oci"))
+    val storageConfig = StorageConfig("oci", AppConf.getStorageKey, AppConf.getStorageSecret, AppConf.getEndPoint, AppConf.getRegion)
     val ociS3Service = StorageServiceFactory.getStorageService(storageConfig)
 
-    val storageContainer = AppConf.getConfig("oci_storage_container")
+    val storageContainer = AppConf.getConfig("cloud_storage_container")
 
     // Use this exception block to execute the test cases successfully when it has invalid configuration.
     val caught =
