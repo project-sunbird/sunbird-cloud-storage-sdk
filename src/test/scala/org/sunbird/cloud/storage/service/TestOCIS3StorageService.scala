@@ -9,7 +9,7 @@ class TestOCIS3StorageService  extends FlatSpec with Matchers {
 
   it should "test for OCIS3 storage" in {
 
-    val storageConfig = StorageConfig("oci", AppConf.getStorageKey, AppConf.getStorageSecret, AppConf.getEndPoint, AppConf.getRegion)
+    val storageConfig = StorageConfig("oci", AppConf.getStorageKey, AppConf.getStorageSecret, Option("https://xyz.compat.objectstorage.ap-hyderabad-1.oraclecloud.com"), AppConf.getRegion)
     val ociS3Service = StorageServiceFactory.getStorageService(storageConfig)
 
     val storageContainer = AppConf.getConfig("cloud_storage_container")
