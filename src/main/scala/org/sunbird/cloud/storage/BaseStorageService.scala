@@ -51,6 +51,17 @@ trait BaseStorageService extends IStorageService {
         Future.sequence(futures);
     }
 
+    def createContainerInLocation(container: String): Unit = {
+        blobStore.createContainerInLocation(null, container)
+    }
+
+    def putBlob(objectKey: String, file: File, container: String): Unit = {
+        val payload = Files.asByteSource(file)
+        val  contentType = tika.detect(file)
+        val blob = blobStore.blobBuilder(objectKey).payload(payload).contentType(contentType).contentEncoding("UTF-8").contentLength(payload.size()).build()
+        blobStore.putBlob(container, blob, new PutOptions().multipart())
+    }
+
     override def upload(container: String, file: String, objectKey: String, isDirectory: Option[Boolean] = Option(false), attempt: Option[Int] = Option(1), retryCount: Option[Int] = None, ttl: Option[Int] = None): String = {
         try {
             if(isDirectory.get) {
@@ -68,12 +79,9 @@ trait BaseStorageService extends IStorageService {
                     throw new StorageServiceException(message)
                 }
 
-                blobStore.createContainerInLocation(null, container)
+                createContainerInLocation(container)
                 val fileObj = new File(file)
-                val payload = Files.asByteSource(fileObj)
-                val  contentType = tika.detect(fileObj)
-                val blob = blobStore.blobBuilder(objectKey).payload(payload).contentType(contentType).contentEncoding("UTF-8").contentLength(payload.size()).build()
-                blobStore.putBlob(container, blob, new PutOptions().multipart())
+                putBlob(objectKey, fileObj, container)
                 if (ttl.isDefined) {
                     getSignedURL(container, objectKey, Option(ttl.get))
                 } else
@@ -103,7 +111,7 @@ trait BaseStorageService extends IStorageService {
                 throw new StorageServiceException(message)
             }
 
-            blobStore.createContainerInLocation(null, container)
+            createContainerInLocation(container)
             val blob = blobStore.blobBuilder(objectKey).payload(content).contentLength(content.length).build()
             blobStore.putBlob(container, blob, new PutOptions().multipart())
             if(isPublic.get) {
@@ -121,8 +129,29 @@ trait BaseStorageService extends IStorageService {
     }
 
     override def getSignedURL(container: String, objectKey: String, ttl: Option[Int] = None, permission: Option[String] = Option("r")): String = {
+        if (context.getBlobStore.toString.contains("google")) {
+            throw new StorageServiceException("getSignedURL method is not supported for GCP. Please use getPutSignedURL with contentType.", new Exception())
+        }
+        else {
+            if (permission.getOrElse("").equalsIgnoreCase("w")) {
+                context.getSigner.signPutBlob(container, blobStore.blobBuilder(objectKey).forSigning().contentLength(maxContentLength).build(), ttl.getOrElse(maxSignedurlTTL).asInstanceOf[Number].longValue()).getEndpoint.toString
+            } else {
+                context.getSigner.signGetBlob(container, objectKey, ttl.getOrElse(maxSignedurlTTL)).getEndpoint.toString
+            }
+        }
+    }
+
+    override def getSignedURLV2(container: String, objectKey: String, ttl: Option[Int] = None, permission: Option[String] = Option("r"), contentType: Option[String] = Option("text/plain")): String = {
+        if (context.getBlobStore.toString.contains("google")) {
+            getPutSignedURL(container, objectKey, Option(maxSignedurlTTL), None, contentType)
+        } else {
+            getSignedURL(container, objectKey, ttl, permission)
+        }
+    }
+
+    def getPutSignedURL(container: String, objectKey: String, ttl: Option[Int] = None, permission: Option[String] = Option("r"), contentType: Option[String] = Option("text/plain")): String = {
         if (permission.getOrElse("").equalsIgnoreCase("w")) {
-            context.getSigner.signPutBlob(container, blobStore.blobBuilder(objectKey).forSigning().contentLength(maxContentLength).build(), ttl.getOrElse(maxSignedurlTTL).asInstanceOf[Number].longValue()).getEndpoint.toString
+            context.getSigner.signPutBlob(container, blobStore.blobBuilder(objectKey).forSigning().contentLength(maxContentLength).contentType(contentType.get).build(), ttl.getOrElse(maxSignedurlTTL).asInstanceOf[Number].longValue()).getEndpoint.toString
         } else {
             context.getSigner.signGetBlob(container, objectKey, ttl.getOrElse(maxSignedurlTTL)).getEndpoint.toString
         }

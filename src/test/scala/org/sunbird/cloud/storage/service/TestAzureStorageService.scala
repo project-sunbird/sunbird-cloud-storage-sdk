@@ -10,9 +10,9 @@ class TestAzureStorageService extends FlatSpec with Matchers {
 
     it should "test for azure storage" in {
 
-        val azureService = StorageServiceFactory.getStorageService(StorageConfig("azure", AppConf.getStorageKey("azure"), AppConf.getStorageSecret("azure")))
+        val azureService = StorageServiceFactory.getStorageService(StorageConfig("azure", AppConf.getStorageKey, AppConf.getStorageSecret))
 
-        val storageContainer = AppConf.getConfig("azure_storage_container")
+        val storageContainer = AppConf.getConfig("cloud_storage_container")
 
         azureService.upload(storageContainer, "src/test/resources/test-data.log", "testUpload/test-blob.log", Option(false), Option(1), Option(2), None)
        // azureService.download(storageContainer, "testUpload/test-blob.log", "src/test/resources/test-azure/")

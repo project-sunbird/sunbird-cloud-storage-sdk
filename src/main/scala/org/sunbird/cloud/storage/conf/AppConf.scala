@@ -15,31 +15,24 @@ object AppConf {
         else "";
     }
 
-    def getConfig(): Config = {
-        return conf;
+    def getConfig: Config = conf
+
+
+    def getStorageType: String = getConfig("cloud_storage_type")
+
+    def getStorageKey: String = getConfig("cloud_storage_key")
+
+    def getStorageSecret: String = getConfig("cloud_storage_secret")
+
+    def getRegion: Option[String] = {
+        if (getStorageType.equals("oci"))
+            Option(getConfig("cloud_storage_region"))
+        else Option("")
     }
 
-    def getAwsKey(): String = {
-        getConfig("aws_storage_key");
-    }
-
-    def getAwsSecret(): String = {
-        getConfig("aws_storage_secret");
-    }
-
-    def getStorageType(): String = {
-        getConfig("cloud_storage_type");
-    }
-
-    def getStorageKey(`type`: String): String = {
-        if (`type`.equals("aws")) getConfig("aws_storage_key");
-        else if (`type`.equals("azure")) getConfig("azure_storage_key");
-        else "";
-    }
-
-    def getStorageSecret(`type`: String): String = {
-        if (`type`.equals("aws")) getConfig("aws_storage_secret");
-        else if (`type`.equals("azure")) getConfig("azure_storage_secret");
-        else "";
+    def getEndPoint: Option[String] = {
+        if (getStorageType.equals("oci"))
+            Option(getConfig("cloud_storage_endpoint"))
+        else Option("")
     }
 }
