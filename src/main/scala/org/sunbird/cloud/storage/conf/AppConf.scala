@@ -24,15 +24,7 @@ object AppConf {
 
     def getStorageSecret: String = getConfig("cloud_storage_secret")
 
-    def getRegion: Option[String] = {
-        if (getStorageType.equals("oci"))
-            Option(getConfig("cloud_storage_region"))
-        else Option("")
-    }
+    def getRegion: Option[String] = Option(getConfig("cloud_storage_region"))
 
-    def getEndPoint: Option[String] = {
-        if (getStorageType.equals("oci"))
-            Option(getConfig("cloud_storage_endpoint"))
-        else Option("")
-    }
+    def getEndPoint: Option[String] = Option(getConfig("cloud_storage_endpoint"))
 }
