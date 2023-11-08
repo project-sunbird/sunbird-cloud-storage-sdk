@@ -6,15 +6,18 @@ import com.fasterxml.jackson.core.`type`.TypeReference
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
+import com.fasterxml.jackson.annotation.JsonInclude.Value
 import com.fasterxml.jackson.databind.SerializationFeature
+
 
 object JSONUtils {
 
   @transient val mapper = new ObjectMapper();
   mapper.registerModule(DefaultScalaModule);
   mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-  mapper.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
+  mapper.configOverride(Map.getClass).setInclude(Value.construct(JsonInclude.Include.NON_NULL, JsonInclude.Include.NON_NULL))
   mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
   mapper.setSerializationInclusion(Include.NON_NULL);
 
