@@ -51,6 +51,17 @@ trait BaseStorageService extends IStorageService {
         Future.sequence(futures);
     }
 
+    def createContainerInLocation(container: String): Unit = {
+        blobStore.createContainerInLocation(null, container)
+    }
+
+    def putBlob(objectKey: String, file: File, container: String): Unit = {
+        val payload = Files.asByteSource(file)
+        val  contentType = tika.detect(file)
+        val blob = blobStore.blobBuilder(objectKey).payload(payload).contentType(contentType).contentEncoding("UTF-8").contentLength(payload.size()).build()
+        blobStore.putBlob(container, blob, new PutOptions().multipart())
+    }
+
     override def upload(container: String, file: String, objectKey: String, isDirectory: Option[Boolean] = Option(false), attempt: Option[Int] = Option(1), retryCount: Option[Int] = None, ttl: Option[Int] = None): String = {
         try {
             if(isDirectory.get) {
@@ -68,12 +79,9 @@ trait BaseStorageService extends IStorageService {
                     throw new StorageServiceException(message)
                 }
 
-                blobStore.createContainerInLocation(null, container)
+                createContainerInLocation(container)
                 val fileObj = new File(file)
-                val payload = Files.asByteSource(fileObj)
-                val  contentType = tika.detect(fileObj)
-                val blob = blobStore.blobBuilder(objectKey).payload(payload).contentType(contentType).contentEncoding("UTF-8").contentLength(payload.size()).build()
-                blobStore.putBlob(container, blob, new PutOptions().multipart())
+                putBlob(objectKey, fileObj, container)
                 if (ttl.isDefined) {
                     getSignedURL(container, objectKey, Option(ttl.get))
                 } else
@@ -103,7 +111,7 @@ trait BaseStorageService extends IStorageService {
                 throw new StorageServiceException(message)
             }
 
-            blobStore.createContainerInLocation(null, container)
+            createContainerInLocation(container)
             val blob = blobStore.blobBuilder(objectKey).payload(content).contentLength(content.length).build()
             blobStore.putBlob(container, blob, new PutOptions().multipart())
             if(isPublic.get) {
