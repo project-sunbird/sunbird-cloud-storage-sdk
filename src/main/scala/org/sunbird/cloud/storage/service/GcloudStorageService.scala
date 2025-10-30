@@ -93,26 +93,55 @@ class GcloudStorageService(config: StorageConfig) extends BaseStorageService  {
    */
   override def getPutSignedURL(container: String, objectKey: String,  ttl: Option[Int], permission: Option[String] = Option("r"),
                                contentType: Option[String] = Option("application/octet-stream"), additionalParams: Option[Map[String,String]] = None): String = {
-    if(additionalParams.get == None) {
+    if(additionalParams.isEmpty) {
       throw new StorageServiceException("Missing google credentials params.")
     }
-    val properties = additionalParams.get;
-    // getting credentials
-    val credentials = ServiceAccountCredentials.fromPkcs8(properties.get("clientId").get, properties.get("clientEmail").get, properties.get("privateKeyPkcs8").get,
-    properties.get("privateKeyIds").get, new java.util.ArrayList[String]())
-    // creating storage options
-    val storage = StorageOptions.newBuilder.setProjectId(properties.get("projectId").get).setCredentials(credentials).build.getService
-    // setting header as application/octet-stream (required by google)
-    val extensionHeaders = Map(HttpHeaders.CONTENT_TYPE -> contentType.getOrElse(MimeTypes.OCTET_STREAM))
-    // creating blob info
-    val blobInfo = BlobInfo.newBuilder(BlobId.of(container, objectKey)).build
     // expiry time validation as TTL cannot be greater than 604800
     // expiry time will be set to default value of 604800 if greater than 604800
+    val properties = additionalParams.get
+    // prepare common credentials, storage and blob info once
+    val credentials = ServiceAccountCredentials.fromPkcs8(properties.get("clientId").get, properties.get("clientEmail").get, properties.get("privateKeyPkcs8").get,
+      properties.get("privateKeyIds").get, new java.util.ArrayList[String]())
+    val storage = StorageOptions.newBuilder.setProjectId(properties.get("projectId").get).setCredentials(credentials).build.getService
+    val blobInfo = BlobInfo.newBuilder(BlobId.of(container, objectKey)).build
     val expiryTime = if(ttl.get > maxSignedurlTTL) maxSignedurlTTL else ttl.get
     //creating signed url
-    val url = storage.signUrl(blobInfo, expiryTime, TimeUnit.SECONDS, Storage.SignUrlOption.httpMethod(HttpMethod.PUT),
-//      Storage.SignUrlOption.withExtHeaders(extensionHeaders.asJava),
-      Storage.SignUrlOption.withV4Signature);
+    val effectivePermission = permission.getOrElse("r").toLowerCase
+    val url = effectivePermission match {
+      case "w" =>
+        // extract optional flag to indicate resumable/chunked upload, defaulting to false
+        val isChunkedUpload: Boolean = properties.get("chunked").map(_.toLowerCase).contains("true")
+        if (isChunkedUpload) {
+          // Only for chunked uploads, use resumable POST and include required headers
+          val extensionHeaders = Map(HttpHeaders.CONTENT_TYPE -> contentType.getOrElse(MimeTypes.OCTET_STREAM), "x-goog-resumable" -> "start")
+          storage.signUrl(
+            blobInfo,
+            expiryTime,
+            TimeUnit.SECONDS,
+            Storage.SignUrlOption.httpMethod(HttpMethod.POST),
+            Storage.SignUrlOption.withV4Signature,
+            Storage.SignUrlOption.withExtHeaders(extensionHeaders.asJava)
+          )
+        } else {
+          // Original behavior: simple PUT without extra headers
+          storage.signUrl(
+            blobInfo,
+            expiryTime,
+            TimeUnit.SECONDS,
+            Storage.SignUrlOption.httpMethod(HttpMethod.PUT),
+            Storage.SignUrlOption.withV4Signature
+          )
+        }
+      case _ =>
+        // Default and for any invalid value: generate READ signed URL (GET)
+        storage.signUrl(
+          blobInfo,
+          expiryTime,
+          TimeUnit.SECONDS,
+          Storage.SignUrlOption.httpMethod(HttpMethod.GET),
+          Storage.SignUrlOption.withV4Signature
+        )
+    }
     url.toString;
   }
 
