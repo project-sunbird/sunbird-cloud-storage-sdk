@@ -14,7 +14,7 @@ import org.apache.tika.mime.MimeTypes
 
 import java.io.{File, FileOutputStream}
 import java.util.concurrent.TimeUnit
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class GcloudStorageService(config: StorageConfig) extends BaseStorageService  {
 

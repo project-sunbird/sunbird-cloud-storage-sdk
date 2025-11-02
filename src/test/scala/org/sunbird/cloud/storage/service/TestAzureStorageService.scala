@@ -3,10 +3,12 @@ package org.sunbird.cloud.storage.service
 import org.sunbird.cloud.storage.factory.StorageConfig
 import org.sunbird.cloud.storage.factory.StorageServiceFactory
 import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.sunbird.cloud.storage.conf.AppConf
 import org.sunbird.cloud.storage.exception.StorageServiceException
 
-class TestAzureStorageService extends FlatSpec with Matchers {
+class TestAzureStorageService extends AnyFlatSpec with Matchers {
 
     it should "test for azure storage" in {
 

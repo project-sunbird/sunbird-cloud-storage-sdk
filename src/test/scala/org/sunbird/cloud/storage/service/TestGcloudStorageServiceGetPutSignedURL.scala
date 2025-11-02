@@ -1,12 +1,13 @@
 package org.sunbird.cloud.storage.service
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.sunbird.cloud.storage.conf.AppConf
 import org.sunbird.cloud.storage.factory.{StorageConfig, StorageServiceFactory}
 import scala.io.Source
 import org.sunbird.cloud.storage.util.JSONUtils
 
-class TestGcloudStorageServiceGetPutSignedURL extends FlatSpec with Matchers {
+class TestGcloudStorageServiceGetPutSignedURL extends AnyFlatSpec with Matchers {
 
   ignore should "return a valid V4 PUT signed URL for GCP" in {
 
