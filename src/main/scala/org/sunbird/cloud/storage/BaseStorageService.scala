@@ -9,7 +9,7 @@ import org.apache.tika.Tika
 import org.sunbird.cloud.storage.exception.StorageServiceException
 import org.sunbird.cloud.storage.util.{CommonUtil, JSONUtils}
 
-import collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import org.jclouds.blobstore.options.ListContainerOptions.Builder.{afterMarker, prefix, recursive}
 import org.sunbird.cloud.storage.Model.Blob
 import org.jclouds.blobstore.options.{CopyOptions, PutOptions}

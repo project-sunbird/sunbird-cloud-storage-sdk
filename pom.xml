@@ -1,20 +1,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.sunbird</groupId>
-    <artifactId>cloud-store-sdk_2.12</artifactId>
-    <version>1.4.7.3</version>
+    <artifactId>cloud-store-sdk_2.13</artifactId>
+    <version>1.4.8</version>
     <packaging>jar</packaging>
     <name>Cloud Store SDK</name>
     <description>cloud-store-sdk provides client APIs to handle cloud store (AWS S3, Azure Blobstore, GCP, OCI).</description>
     <url>https://www.sunbird.org/</url>
     <properties>
-    	<maven.compiler.source>1.7</maven.compiler.source>
-		<maven.compiler.target>1.7</maven.compiler.target>
+    	<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <scoverage.plugin.version>1.1.1</scoverage.plugin.version>
-		<scala.maj.version>2.12</scala.maj.version>
+        <scoverage.plugin.version>1.4.4</scoverage.plugin.version>
+		<scala.maj.version>2.13</scala.maj.version>
 		<gcp.storage.version>2.16.0</gcp.storage.version>
-		<scala.version>2.12.11</scala.version>
+		<scala.version>2.13.12</scala.version>
     </properties>
     <licenses>
 		<license>
@@ -179,7 +179,7 @@
 		<dependency>
 			<groupId>org.scalatest</groupId>
 			<artifactId>scalatest_${scala.maj.version}</artifactId>
-			<version>3.0.8</version>
+			<version>3.2.15</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -206,7 +206,7 @@
 				<!-- see http://davidb.github.com/scala-maven-plugin -->
 				<groupId>net.alchim31.maven</groupId>
 				<artifactId>scala-maven-plugin</artifactId>
-				<version>3.2.2</version>
+				<version>4.4.0</version>
 				<executions>
 					<execution>
 						<goals>
