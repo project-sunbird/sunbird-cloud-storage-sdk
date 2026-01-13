@@ -26,7 +26,7 @@ class TestS3IAMStorageService extends AnyFlatSpec with Matchers {
 
         // Create service with IAM role auth (no access keys needed)
         val s3Service = StorageServiceFactory.getStorageService(
-            StorageConfig("aws", "", "", None, Option(region), "iam_role")
+            StorageConfig("aws", "", "", None, Option(region), Option("iam_role"))
         )
 
         // Test 1: List objects in bucket
