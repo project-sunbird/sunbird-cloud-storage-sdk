@@ -24,6 +24,11 @@ object AppConf {
 
     def getStorageSecret: String = getConfig("cloud_storage_secret")
 
+    def getAuthType: String = {
+        val authType = getConfig("cloud_storage_auth_type")
+        if (authType.nonEmpty) authType else "access_key"
+    }
+
     def getRegion: Option[String] = {
         if (getStorageType.equals("oci"))
             Option(getConfig("cloud_storage_region"))

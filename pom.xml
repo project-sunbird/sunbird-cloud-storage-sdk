@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.sunbird</groupId>
     <artifactId>cloud-store-sdk_2.13</artifactId>
-    <version>1.4.8.1</version>
+    <version>1.4.9</version>
     <packaging>jar</packaging>
     <name>Cloud Store SDK</name>
     <description>cloud-store-sdk provides client APIs to handle cloud store (AWS S3, Azure Blobstore, GCP, OCI).</description>
@@ -205,6 +205,12 @@
 			<groupId>org.apache.tika</groupId>
 			<artifactId>tika-core</artifactId>
 			<version>2.9.0</version>
+		</dependency>
+		<!-- AWS SDK v2 for IAM credential resolution (no external Jackson dependency) -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>auth</artifactId>
+			<version>2.25.0</version>
 		</dependency>
 	</dependencies>
     <build>
