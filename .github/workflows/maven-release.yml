@@ -1,0 +1,52 @@
+name: Publish to Maven Central
+
+on:
+  push:
+    branches:
+      - '**'
+  release:
+    types: [created]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: 'maven'
+      
+      - name: Import GPG key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          # Import the GPG key
+          if ! echo "$GPG_PRIVATE_KEY" | base64 -d | gpg --batch --passphrase "$GPG_PASSPHRASE" --import; then
+            echo "Failed to import GPG private key. Please verify that GPG_PRIVATE_KEY and GPG_PASSPHRASE are correctly configured." >&2
+            exit 1
+          fi
+
+      - name: Configure Maven settings
+        uses: s4u/maven-settings-action@v3.0.0
+        with:
+          servers: |
+            [{
+              "id": "central",
+              "username": "${{ secrets.OSSRH_USERNAME }}",
+              "password": "${{ secrets.OSSRH_PASSWORD }}"
+            }]
+          properties: |
+            [{
+              "gpg.executable": "gpg",
+              "gpg.passphrase": "${{ secrets.GPG_PASSPHRASE }}"
+            }]
+      
+      - name: Deploy to Maven Central
+        run: mvn deploy -DskipTests -Dskip.scalatest=true
