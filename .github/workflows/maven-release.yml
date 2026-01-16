@@ -28,11 +28,11 @@ jobs:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           # Import the GPG key
-          echo "$GPG_PRIVATE_KEY" | base64 -d | gpg --batch --passphrase "$GPG_PASSPHRASE" --import
-          
-          # Get the key ID and set it as default
-          KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | head -1 | awk '{print $2}' | cut -d'/' -f2)
-      
+          if ! echo "$GPG_PRIVATE_KEY" | base64 -d | gpg --batch --passphrase "$GPG_PASSPHRASE" --import; then
+            echo "Failed to import GPG private key. Please verify that GPG_PRIVATE_KEY and GPG_PASSPHRASE are correctly configured." >&2
+            exit 1
+          fi
+
       - name: Configure Maven settings
         uses: s4u/maven-settings-action@v3.0.0
         with:
