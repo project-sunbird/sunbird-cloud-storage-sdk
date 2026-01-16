@@ -1,4 +1,4 @@
-name: Publish to Maven Central (Simplified)
+name: Publish to Maven Central
 
 on:
   push:
