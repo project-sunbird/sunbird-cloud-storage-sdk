@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.sunbird</groupId>
-    <artifactId>cloud-store-sdk_2.13</artifactId>
+    <artifactId>cloud-store-sdk_${scala.maj.version}</artifactId>
     <version>1.4.9</version>
     <packaging>jar</packaging>
     <name>Cloud Store SDK</name>
@@ -12,9 +12,7 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <scoverage.plugin.version>1.4.4</scoverage.plugin.version>
-		<scala.maj.version>2.13</scala.maj.version>
 		<gcp.storage.version>2.16.0</gcp.storage.version>
-		<scala.version>2.13.12</scala.version>
     </properties>
     <licenses>
 		<license>
@@ -212,6 +210,18 @@
 			<artifactId>auth</artifactId>
 			<version>2.25.0</version>
 		</dependency>
+		<!-- Required for AWS IAM role-based authentication (web identity tokens) -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>sts</artifactId>
+			<version>2.25.0</version>
+		</dependency>
+		<!-- Scala collection compatibility for 2.12/2.13 cross-building -->
+		<dependency>
+			<groupId>org.scala-lang.modules</groupId>
+			<artifactId>scala-collection-compat_${scala.maj.version}</artifactId>
+			<version>2.11.0</version>
+		</dependency>
 	</dependencies>
     <build>
 		<sourceDirectory>src/main/scala</sourceDirectory>
@@ -312,4 +322,25 @@
 			</plugin>
 		</plugins>
 	</build>
+    <profiles>
+        <!-- Scala 2.13 Profile (Default) -->
+        <profile>
+            <id>scala-2.13</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <scala.maj.version>2.13</scala.maj.version>
+                <scala.version>2.13.12</scala.version>
+            </properties>
+        </profile>
+        <!-- Scala 2.12 Profile -->
+        <profile>
+            <id>scala-2.12</id>
+            <properties>
+                <scala.maj.version>2.12</scala.maj.version>
+                <scala.version>2.12.18</scala.version>
+            </properties>
+        </profile>
+    </profiles>
 </project>
