@@ -15,10 +15,15 @@ import org.apache.tika.mime.MimeTypes
 import java.io.{File, FileOutputStream}
 import java.util.concurrent.TimeUnit
 import scala.jdk.CollectionConverters._
+import org.sunbird.cloud.storage.util.IAMCredentialsSupplier
 
 class GcloudStorageService(config: StorageConfig) extends BaseStorageService  {
 
-  var context = ContextBuilder.newBuilder("google-cloud-storage").credentials(config.storageKey, config.storageSecret).buildView(classOf[BlobStoreContext])
+  if(IAMCredentialsSupplier.isIAMAuth(config.authType.getOrElse(""))) {
+    var context = ContextBuilder.newBuilder("google-cloud-storage").credentialsSupplier(new IAMCredentialsSupplier("gcp")).buildView(classOf[BlobStoreContext])
+  } else {
+    var context = ContextBuilder.newBuilder("google-cloud-storage").credentials(config.storageKey, config.storageSecret).buildView(classOf[BlobStoreContext])
+  }
   var blobStore = context.getBlobStore
 
   override def getPaths(container: String, objects: List[Blob]): List[String] = {
