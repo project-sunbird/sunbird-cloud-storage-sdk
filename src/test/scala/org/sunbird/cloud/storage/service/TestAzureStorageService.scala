@@ -12,7 +12,9 @@ class TestAzureStorageService extends AnyFlatSpec with Matchers {
 
     it should "test for azure storage" in {
 
-        val azureService = StorageServiceFactory.getStorageService(StorageConfig("azure", AppConf.getStorageKey, AppConf.getStorageSecret))
+        // val azureService = StorageServiceFactory.getStorageService(StorageConfig("azure", AppConf.getStorageKey, AppConf.getStorageSecret))
+
+        val azureService = StorageServiceFactory.getStorageService(StorageConfig("azure", AppConf.getStorageKey, AppConf.getStorageSecret, None, None, Option(AppConf.getAuthType)))
 
         val storageContainer = AppConf.getConfig("cloud_storage_container")
 

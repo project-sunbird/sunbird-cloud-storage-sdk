@@ -95,4 +95,8 @@ object CommonUtil {
         }
 
     }
+
+    def isIAMAuth(authType: Option[String]): Boolean = {
+        authType.exists(at => Set("iam", "iam_role", "instance_profile").contains(at.toLowerCase))
+    }
 }

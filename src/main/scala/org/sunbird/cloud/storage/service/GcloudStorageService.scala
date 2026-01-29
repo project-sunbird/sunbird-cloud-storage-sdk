@@ -15,14 +15,14 @@ import org.apache.tika.mime.MimeTypes
 import java.io.{File, FileOutputStream}
 import java.util.concurrent.TimeUnit
 import scala.jdk.CollectionConverters._
-import org.sunbird.cloud.storage.util.IAMCredentialsSupplier
+import org.sunbird.cloud.storage.util.{IAMCredentialsSupplier, CommonUtil}
 
 class GcloudStorageService(config: StorageConfig) extends BaseStorageService  {
 
-  if(IAMCredentialsSupplier.isIAMAuth(config.authType.getOrElse(""))) {
-    var context = ContextBuilder.newBuilder("google-cloud-storage").credentialsSupplier(new IAMCredentialsSupplier("gcp")).buildView(classOf[BlobStoreContext])
+  var context = if(CommonUtil.isIAMAuth(config.authType)) {
+    ContextBuilder.newBuilder("google-cloud-storage").credentialsSupplier(new IAMCredentialsSupplier("gcp")).buildView(classOf[BlobStoreContext])
   } else {
-    var context = ContextBuilder.newBuilder("google-cloud-storage").credentials(config.storageKey, config.storageSecret).buildView(classOf[BlobStoreContext])
+    ContextBuilder.newBuilder("google-cloud-storage").credentials(config.storageKey, config.storageSecret).buildView(classOf[BlobStoreContext])
   }
   var blobStore = context.getBlobStore
 

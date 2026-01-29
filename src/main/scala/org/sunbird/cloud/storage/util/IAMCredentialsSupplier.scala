@@ -8,7 +8,7 @@ import java.io.File
 import scala.io.Source
 import java.time.Duration
 import com.azure.core.credential.TokenRequestContext
-
+import org.sunbird.cloud.storage.conf.AppConf
 /**
   * A Guava Supplier that bridges cloud provider credential resolution with JClouds.
   * Supports AWS, Azure, and GCP credential resolution from various sources.
@@ -120,6 +120,7 @@ class IAMCredentialsSupplier(cloudProvider: String = "aws") extends Supplier[Cre
       // Get storage account name (required for Azure Blob Storage)
       val storageAccountName = Option(System.getenv("AZURE_STORAGE_ACCOUNT"))
         .orElse(Option(System.getProperty("azure.storage.account")))
+        .orElse(Option(AppConf.getStorageKey))
         .getOrElse(throw new IllegalStateException(
           "AZURE_STORAGE_ACCOUNT must be set when using Managed Identity for Azure Blob Storage"
         ))

@@ -5,7 +5,8 @@ import org.jclouds.blobstore.BlobStoreContext
 import org.sunbird.cloud.storage.BaseStorageService
 import org.sunbird.cloud.storage.Model.Blob
 import org.sunbird.cloud.storage.factory.StorageConfig
-import org.sunbird.cloud.storage.util.IAMCredentialsSupplier
+import org.sunbird.cloud.storage.util.{IAMCredentialsSupplier, CommonUtil}
+import java.util.Properties
 
 /**
   * S3 Storage Service that uses IAM Role-based authentication.
@@ -25,11 +26,11 @@ class S3StorageService(config: StorageConfig) extends BaseStorageService {
     private val overrides = new Properties()
     overrides.setProperty("jclouds.regions", awsRegion)
 
-    if(IAMCredentialsSupplier.isIAMAuth(config.authType.getOrElse(""))) {
+    var context = if(CommonUtil.isIAMAuth(config.authType)) {
         // Use credentialsSupplier for dynamic IAM credential resolution
-        var context = ContextBuilder.newBuilder("aws-s3").credentialsSupplier(new IAMCredentialsSupplier("aws")).overrides(overrides).buildView(classOf[BlobStoreContext])
+        ContextBuilder.newBuilder("aws-s3").credentialsSupplier(new IAMCredentialsSupplier("aws")).overrides(overrides).buildView(classOf[BlobStoreContext])
     } else {
-        var context = ContextBuilder.newBuilder("aws-s3").credentials(config.storageKey, config.storageSecret).buildView(classOf[BlobStoreContext])
+        ContextBuilder.newBuilder("aws-s3").credentials(config.storageKey, config.storageSecret).buildView(classOf[BlobStoreContext])
     }
     var blobStore = context.getBlobStore 
 
