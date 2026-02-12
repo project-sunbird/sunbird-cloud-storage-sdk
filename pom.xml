@@ -1,8 +1,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.sunbird</groupId>
-    <artifactId>cloud-store-sdk-${scala.maj.version}</artifactId>
-    <version>1.4.9.12</version>
+    <artifactId>cloud-store-sdk_${scala.maj.version}</artifactId>
+    <version>1.4.91</version>
     <packaging>jar</packaging>
     <name>Cloud Store SDK</name>
     <description>cloud-store-sdk provides client APIs to handle cloud store (AWS S3, Azure Blobstore, GCP, OCI).</description>
