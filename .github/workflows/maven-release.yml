@@ -48,8 +48,8 @@ jobs:
               "gpg.passphrase": "${{ secrets.GPG_PASSPHRASE }}"
             }]
       
-      - name: Build with Scala 2.12
-        run: mvn clean install -Pscala-2.12 -DskipTests -Dskip.scalatest=true
+      - name: Build with Scala 2.13
+        run: mvn clean install -Pscala-2.13 -DskipTests -Dskip.scalatest=true
 
       - name: Deploy to Maven Central
-        run: mvn deploy -Pscala-2.12 -DskipTests -Dskip.scalatest=true
+        run: mvn deploy -Pscala-2.13 -DskipTests -Dskip.scalatest=true
