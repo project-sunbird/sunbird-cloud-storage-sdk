@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.sunbird</groupId>
     <artifactId>cloud-store-sdk_${scala.maj.version}</artifactId>
-    <version>1.4.9</version>
+    <version>1.4.10</version>
     <packaging>jar</packaging>
     <name>Cloud Store SDK</name>
     <description>cloud-store-sdk provides client APIs to handle cloud store (AWS S3, Azure Blobstore, GCP, OCI).</description>
@@ -319,6 +319,30 @@
 				<configuration>
 					<publishingServerId>central</publishingServerId>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>flatten-maven-plugin</artifactId>
+				<version>1.5.0</version>
+				<configuration>
+					<flattenMode>ossrh</flattenMode>
+				</configuration>
+				<executions>
+					<execution>
+						<id>flatten</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>flatten</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>flatten.clean</id>
+						<phase>clean</phase>
+						<goals>
+							<goal>clean</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
