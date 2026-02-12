@@ -11,8 +11,9 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     strategy:
+      max-parallel: 1
       matrix:
-        scala_profile: [scala-2.12]
+        scala_profile: [scala-2.12, scala-2.13]
     
     steps:
       - name: Checkout code
@@ -52,4 +53,4 @@ jobs:
             }]
       
       - name: Deploy to Maven Central
-        run: mvn deploy -P${{ matrix.scala_profile }} -DskipTests -Dskip.scalatest=true
+        run: mvn clean deploy -P${{ matrix.scala_profile }} -DskipTests -Dskip.scalatest=true
