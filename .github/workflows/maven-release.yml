@@ -10,18 +10,21 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    
+    strategy:
+      matrix:
+        scala_profile: [scala-2.12, scala-2.13]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Set up JDK 11
         uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
           cache: 'maven'
-      
+
       - name: Import GPG key
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -48,8 +51,5 @@ jobs:
               "gpg.passphrase": "${{ secrets.GPG_PASSPHRASE }}"
             }]
       
-      - name: Build with Scala 2.13
-        run: mvn clean install -Pscala-2.13 -DskipTests -Dskip.scalatest=true
-
       - name: Deploy to Maven Central
-        run: mvn deploy -Pscala-2.13 -DskipTests -Dskip.scalatest=true
+        run: mvn deploy -P${{ matrix.scala_profile }} -DskipTests -Dskip.scalatest=true
