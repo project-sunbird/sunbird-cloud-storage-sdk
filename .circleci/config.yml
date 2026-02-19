@@ -2,21 +2,30 @@ version: 2.1
 jobs:
   cloud-storage-build:
     machine:
-      image: ubuntu-2004:202201-02
+      image: ubuntu-2204:current
     steps:
       - checkout
       - restore_cache:
           key: cloud-storage-dependency-cache-{{ checksum "pom.xml" }}
       - run:
+          name: Set up JDK 11
+          command: |
+            sudo apt-get update && sudo apt-get install -y openjdk-11-jdk
+            export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+            export PATH=$JAVA_HOME/bin:$PATH
+      - run:
           name: Build
-          command: mvn scoverage:report
+          command: mvn clean verify -DskipTests
       - save_cache:
           key: cloud-storage-dependency-cache-{{ checksum "pom.xml" }}
           paths: ~/.m2
       - run:
+          name: Test
+          command: mvn test
+      - run:
           name: sonar
           command: |
-            mvn -X sonar:sonar -Dsonar.projectKey=project-sunbird_sunbird-cloud-storage-sdk  -Dsonar.host.url=https://sonarcloud.io -Dsonar.organization=project-sunbird
+            mvn -X sonar:sonar -Dsonar.projectKey=project-sunbird_sunbird-cloud-storage-sdk -Dsonar.host.url=https://sonarcloud.io -Dsonar.organization=project-sunbird
 
 workflows:
   version: 2.1
