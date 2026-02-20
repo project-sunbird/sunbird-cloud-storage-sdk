@@ -47,8 +47,5 @@ jobs:
               "gpg.passphrase": "${{ secrets.GPG_PASSPHRASE }}"
             }]
 
-      - name: Build all modules
-        run: mvn clean verify -DskipTests
-
       - name: Deploy to Maven Central
-        run: mvn deploy -DskipTests
+        run: mvn deploy -Prelease -DskipTests
