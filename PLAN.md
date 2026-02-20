@@ -490,9 +490,8 @@ IStorageService service = StorageServiceFactory.getStorageService(config);
 
 ### Phase 6: CI/CD and Release
 1. Update `.github/workflows/maven-release.yml` for multi-module build
-2. Update `.circleci/config.yml` for multi-module build and SonarCloud analysis
-3. Configure individual module publishing to Maven Central
-4. Update README with architecture overview and migration guide
+2. Configure individual module publishing to Maven Central
+3. Update README with architecture overview and migration guide
 
 ---
 
