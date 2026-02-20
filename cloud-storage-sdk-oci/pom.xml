@@ -28,6 +28,12 @@
             <scope>runtime</scope>
         </dependency>
         <dependency>
+            <groupId>org.sunbird</groupId>
+            <artifactId>cloud-storage-sdk-api</artifactId>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
