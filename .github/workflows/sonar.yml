@@ -1,0 +1,43 @@
+name: SonarCloud Analysis
+
+on:
+  push:
+    branches:
+      - v1.4.10
+      - main
+      - master
+  pull_request:
+    branches:
+      - v1.4.10
+      - main
+      - master
+
+jobs:
+  sonar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build and run tests
+        run: mvn clean verify
+
+      - name: SonarCloud analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          mvn sonar:sonar
+          -Dsonar.projectKey=project-sunbird_sunbird-cloud-storage-sdk
+          -Dsonar.organization=project-sunbird
+          -Dsonar.host.url=https://sonarcloud.io
