@@ -2,6 +2,7 @@ package org.sunbird.cloud.storage.service.oci;
 
 import com.oracle.bmc.Region;
 import com.oracle.bmc.auth.AuthenticationDetailsProvider;
+import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.bmc.auth.InstancePrincipalsAuthenticationDetailsProvider;
 import com.oracle.bmc.auth.SimpleAuthenticationDetailsProvider;
 import com.oracle.bmc.objectstorage.ObjectStorageClient;
@@ -43,7 +44,7 @@ public class OciStorageService extends AbstractStorageService {
     public OciStorageService(StorageConfig config) {
         this.config = config;
 
-        AuthenticationDetailsProvider authProvider = resolveAuth(config);
+        BasicAuthenticationDetailsProvider authProvider = resolveAuth(config);
 
         ObjectStorageClient.Builder clientBuilder = ObjectStorageClient.builder();
 
@@ -64,7 +65,7 @@ public class OciStorageService extends AbstractStorageService {
                 namespace, config.getAuthType());
     }
 
-    private AuthenticationDetailsProvider resolveAuth(StorageConfig config) {
+    private BasicAuthenticationDetailsProvider resolveAuth(StorageConfig config) {
         switch (config.getAuthType()) {
             case ACCESS_KEY:
                 // For API Key auth, storageKey is the user OCID, storageSecret is the private key PEM
