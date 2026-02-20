@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -56,7 +57,7 @@ public abstract class BaseStorageServiceIntegrationTest {
                     service.deleteObjects(getContainer(),
                             keys.stream()
                                     .map(DeleteTarget::file)
-                                    .toList());
+                                    .collect(Collectors.toList()));
                 }
             } finally {
                 service.close();
