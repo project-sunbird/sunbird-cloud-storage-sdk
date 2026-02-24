@@ -217,11 +217,12 @@
 		<dependency>
 			<groupId>org.apache.avro</groupId>
 			<artifactId>avro</artifactId>
+			<version>1.11.5</version>
 		</dependency>
 		<dependency>
 			<groupId>org.xerial.snappy</groupId>
 			<artifactId>snappy-java</artifactId>
-			<version>1.1.10.4</version>
+			<version>1.1.10.7</version>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.jettison</groupId>
@@ -231,7 +232,7 @@
 		<dependency>
 			<groupId>com.google.protobuf</groupId>
 			<artifactId>protobuf-java</artifactId>
-			<version>3.21.7</version>
+			<version>3.25.5</version>
 		</dependency>	
         <dependency>
             <groupId>com.typesafe</groupId>
@@ -249,26 +250,26 @@
 			<version>3.2.15</version>
 			<scope>test</scope>
 		</dependency>
-		<!-- Jackson: keep on 2.12.x line so that Scala module and databind are compatible -->
+		<!-- Jackson 2.17.x: all modules must use the same version -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-core</artifactId>
-			<version>2.12.7</version>
+			<version>${jackson.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-annotations</artifactId>
-			<version>2.12.7</version>
+			<version>${jackson.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>2.12.7</version>
+			<version>${jackson.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.module</groupId>
 			<artifactId>jackson-module-scala_${scala.maj.version}</artifactId>
-			<version>2.12.7</version>
+			<version>${jackson.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tika</groupId>
@@ -284,13 +285,23 @@
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>auth</artifactId>
-			<version>2.25.0</version>
+			<version>${aws.sdk.version}</version>
 		</dependency>
 		<!-- Required for AWS IAM role-based authentication (web identity tokens) -->
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>sts</artifactId>
-			<version>2.25.0</version>
+			<version>${aws.sdk.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>io.netty</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>software.amazon.awssdk</groupId>
+					<artifactId>netty-nio-client</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<!-- Scala collection compatibility for 2.12/2.13 cross-building -->
 		<dependency>
@@ -298,6 +309,7 @@
 			<artifactId>scala-collection-compat_${scala.maj.version}</artifactId>
 			<version>2.11.0</version>
 		</dependency>
+		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 			<version>3.18.0</version>
