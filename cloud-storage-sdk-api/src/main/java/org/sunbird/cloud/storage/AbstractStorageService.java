@@ -106,7 +106,8 @@ public abstract class AbstractStorageService implements IStorageService {
                 for (File f : files) {
                     String relativePath = f.getAbsolutePath()
                             .substring((dir.getAbsolutePath() + File.separator).length());
-                    String key = objectKey + "/" + relativePath;
+                    String prefix = objectKey.endsWith("/") ? objectKey : objectKey + "/";
+                    String key = prefix + relativePath;
                     urls.add(upload(container, f.getAbsolutePath(), key, false, attempt, maxAttempts, ttl));
                 }
                 return String.join(",", urls);
@@ -153,7 +154,8 @@ public abstract class AbstractStorageService implements IStorageService {
             for (File f : files) {
                 String relativePath = f.getAbsolutePath()
                         .substring((dir.getAbsolutePath() + File.separator).length());
-                String key = objectKey + "/" + relativePath;
+                String prefix = objectKey.endsWith("/") ? objectKey : objectKey + "/";
+                String key = prefix + relativePath;
                 futures.add(CompletableFuture.supplyAsync(() ->
                         upload(container, f.getAbsolutePath(), key, false, attempt,
                                 retryCount != null ? retryCount : 0, ttl)));
