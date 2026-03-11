@@ -73,7 +73,7 @@ class AbstractStorageServiceTest {
 
         assertTrue(result.contains("prefix/data/a.txt"), "Expected prefix/data/a.txt, got: " + result);
         assertTrue(result.contains("prefix/data/b.txt"), "Expected prefix/data/b.txt, got: " + result);
-        assertFalse(result.contains("//"), "Keys must not contain double slashes: " + result);
+        assertFalse(pathOf(result).contains("//"), "Keys must not contain double slashes: " + result);
         assertTrue(service.exists("bucket", "prefix/data/a.txt"));
         assertTrue(service.exists("bucket", "prefix/data/b.txt"));
     }
@@ -88,12 +88,12 @@ class AbstractStorageServiceTest {
         String result = service.upload("bucket", dir.toString(), "prefix/data", true, 1, 0, null);
 
         assertTrue(result.contains("prefix/data/c.txt"), "Expected prefix/data/c.txt, got: " + result);
-        assertFalse(result.contains("//"), "Keys must not contain double slashes: " + result);
+        assertFalse(pathOf(result).contains("//"), "Keys must not contain double slashes: " + result);
         assertTrue(service.exists("bucket", "prefix/data/c.txt"));
     }
 
     @Test
-    void uploadFolder_withTrailingSlash_noDoubleSlash() throws ExecutionException, InterruptedException {
+    void uploadFolder_withTrailingSlash_noDoubleSlash() throws ExecutionException, InterruptedException, IOException {
         Path dir = tempDir.resolve("async-slash");
         Files.createDirectory(dir);
         Files.writeString(dir.resolve("x.txt"), "xxx");
@@ -107,12 +107,12 @@ class AbstractStorageServiceTest {
                 "Expected async/data/x.txt in: " + urls);
         assertTrue(urls.stream().anyMatch(u -> u.contains("async/data/y.txt")),
                 "Expected async/data/y.txt in: " + urls);
-        urls.forEach(u -> assertFalse(u.contains("//"),
+        urls.forEach(u -> assertFalse(pathOf(u).contains("//"),
                 "URL must not contain double slashes: " + u));
     }
 
     @Test
-    void uploadFolder_withoutTrailingSlash_addsSingleSlash() throws ExecutionException, InterruptedException {
+    void uploadFolder_withoutTrailingSlash_addsSingleSlash() throws ExecutionException, InterruptedException, IOException {
         Path dir = tempDir.resolve("async-noslash");
         Files.createDirectory(dir);
         Files.writeString(dir.resolve("z.txt"), "zzz");
@@ -122,7 +122,7 @@ class AbstractStorageServiceTest {
 
         assertTrue(urls.stream().anyMatch(u -> u.contains("async/data/z.txt")),
                 "Expected async/data/z.txt in: " + urls);
-        urls.forEach(u -> assertFalse(u.contains("//"),
+        urls.forEach(u -> assertFalse(pathOf(u).contains("//"),
                 "URL must not contain double slashes: " + u));
     }
 
@@ -484,5 +484,11 @@ class AbstractStorageServiceTest {
         public void close() {
             store.clear();
         }
+    }
+
+    /** Removes all scheme separators ("://") so that double-slash checks only apply
+     *  to path segments, not the scheme — handles both single and multi-URL strings. */
+    private static String pathOf(String url) {
+        return url.replace("://", "");
     }
 }
