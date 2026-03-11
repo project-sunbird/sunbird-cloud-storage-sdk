@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -58,6 +59,71 @@ class AbstractStorageServiceTest {
         assertTrue(result.contains("prefix/data/b.txt"));
         assertTrue(service.exists("bucket", "prefix/data/a.txt"));
         assertTrue(service.exists("bucket", "prefix/data/b.txt"));
+    }
+
+    @Test
+    void upload_directory_withTrailingSlash_noDoubleSlash() throws IOException {
+        Path dir = tempDir.resolve("data-slash");
+        Files.createDirectory(dir);
+        Files.writeString(dir.resolve("a.txt"), "aaa");
+        Files.writeString(dir.resolve("b.txt"), "bbb");
+
+        // objectKey already ends with '/' — must not produce "prefix/data//a.txt"
+        String result = service.upload("bucket", dir.toString(), "prefix/data/", true, 1, 0, null);
+
+        assertTrue(result.contains("prefix/data/a.txt"), "Expected prefix/data/a.txt, got: " + result);
+        assertTrue(result.contains("prefix/data/b.txt"), "Expected prefix/data/b.txt, got: " + result);
+        assertFalse(result.contains("//"), "Keys must not contain double slashes: " + result);
+        assertTrue(service.exists("bucket", "prefix/data/a.txt"));
+        assertTrue(service.exists("bucket", "prefix/data/b.txt"));
+    }
+
+    @Test
+    void upload_directory_withoutTrailingSlash_addsSingleSlash() throws IOException {
+        Path dir = tempDir.resolve("data-noslash");
+        Files.createDirectory(dir);
+        Files.writeString(dir.resolve("c.txt"), "ccc");
+
+        // objectKey has no trailing '/' — must add exactly one
+        String result = service.upload("bucket", dir.toString(), "prefix/data", true, 1, 0, null);
+
+        assertTrue(result.contains("prefix/data/c.txt"), "Expected prefix/data/c.txt, got: " + result);
+        assertFalse(result.contains("//"), "Keys must not contain double slashes: " + result);
+        assertTrue(service.exists("bucket", "prefix/data/c.txt"));
+    }
+
+    @Test
+    void uploadFolder_withTrailingSlash_noDoubleSlash() throws ExecutionException, InterruptedException {
+        Path dir = tempDir.resolve("async-slash");
+        Files.createDirectory(dir);
+        Files.writeString(dir.resolve("x.txt"), "xxx");
+        Files.writeString(dir.resolve("y.txt"), "yyy");
+
+        // async uploadFolder — same prefix logic at line 157-158
+        List<String> urls = service.uploadFolder("bucket", dir.toString(), "async/data/")
+                .get();
+
+        assertTrue(urls.stream().anyMatch(u -> u.contains("async/data/x.txt")),
+                "Expected async/data/x.txt in: " + urls);
+        assertTrue(urls.stream().anyMatch(u -> u.contains("async/data/y.txt")),
+                "Expected async/data/y.txt in: " + urls);
+        urls.forEach(u -> assertFalse(u.contains("//"),
+                "URL must not contain double slashes: " + u));
+    }
+
+    @Test
+    void uploadFolder_withoutTrailingSlash_addsSingleSlash() throws ExecutionException, InterruptedException {
+        Path dir = tempDir.resolve("async-noslash");
+        Files.createDirectory(dir);
+        Files.writeString(dir.resolve("z.txt"), "zzz");
+
+        List<String> urls = service.uploadFolder("bucket", dir.toString(), "async/data")
+                .get();
+
+        assertTrue(urls.stream().anyMatch(u -> u.contains("async/data/z.txt")),
+                "Expected async/data/z.txt in: " + urls);
+        urls.forEach(u -> assertFalse(u.contains("//"),
+                "URL must not contain double slashes: " + u));
     }
 
     @Test
