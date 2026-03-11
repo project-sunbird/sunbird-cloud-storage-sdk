@@ -7,10 +7,13 @@ import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.azure.storage.blob.models.BlobHttpHeaders;
 import com.azure.storage.blob.models.BlobItem;
 import com.azure.storage.blob.models.BlobListDetails;
 import com.azure.storage.blob.models.BlobProperties;
 import com.azure.storage.blob.models.ListBlobsOptions;
+import com.azure.storage.blob.options.BlobParallelUploadOptions;
+import com.azure.storage.blob.options.BlobUploadFromFileOptions;
 import com.azure.storage.blob.sas.BlobSasPermission;
 import com.azure.storage.blob.sas.BlobServiceSasSignatureValues;
 import com.azure.storage.common.StorageSharedKeyCredential;
@@ -94,6 +97,21 @@ public class AzureStorageService extends AbstractStorageService {
         return getContainerClient(container).getBlobClient(objectKey);
     }
 
+    /**
+     * The Azure SDK's getBlobUrl() encodes '/' in blob names as '%2F'.
+     * This replaces only %2F with '/', leaving all other percent-encoded characters
+     */
+    private String decodeBlobUrl(String url) {
+        try {
+            java.net.URI uri = new java.net.URI(url);
+            String path = uri.getRawPath().replace("%2F", "/").replace("%2f", "/");
+            String result = uri.getScheme() + "://" + uri.getRawAuthority() + path;
+            return uri.getRawQuery() != null ? result + "?" + uri.getRawQuery() : result;
+        } catch (java.net.URISyntaxException e) {
+            return url;
+        }
+    }
+
     @Override
     protected void ensureContainerExists(String container) {
         try {
@@ -113,10 +131,11 @@ public class AzureStorageService extends AbstractStorageService {
         try {
             BlobClient blobClient = getBlobClient(container, objectKey);
             String contentType = tika.detect(file);
-            blobClient.uploadFromFile(file.getAbsolutePath(), true);
-            blobClient.setHttpHeaders(new com.azure.storage.blob.models.BlobHttpHeaders()
-                    .setContentType(contentType));
-            return blobClient.getBlobUrl();
+            blobClient.uploadFromFileWithResponse(
+                    new BlobUploadFromFileOptions(file.getAbsolutePath())
+                            .setHeaders(new BlobHttpHeaders().setContentType(contentType)),
+                    null, null);
+            return decodeBlobUrl(blobClient.getBlobUrl());
         } catch (Exception e) {
             throw new StorageServiceException(
                     "Failed to put object from file: " + objectKey + " - " + e.getMessage(), e);
@@ -127,8 +146,12 @@ public class AzureStorageService extends AbstractStorageService {
     protected String putObject(String container, String objectKey, byte[] content) {
         try {
             BlobClient blobClient = getBlobClient(container, objectKey);
-            blobClient.upload(new ByteArrayInputStream(content), content.length, true);
-            return blobClient.getBlobUrl();
+            String contentType = tika.detect(new ByteArrayInputStream(content), objectKey);
+            blobClient.uploadWithResponse(
+                    new BlobParallelUploadOptions(new ByteArrayInputStream(content), content.length)
+                            .setHeaders(new BlobHttpHeaders().setContentType(contentType)),
+                    null, null);
+            return decodeBlobUrl(blobClient.getBlobUrl());
         } catch (Exception e) {
             throw new StorageServiceException(
                     "Failed to put object from bytes: " + objectKey + " - " + e.getMessage(), e);
@@ -148,7 +171,7 @@ public class AzureStorageService extends AbstractStorageService {
 
     @Override
     protected String getObjectUri(String container, String objectKey) {
-        return getBlobClient(container, objectKey).getBlobUrl();
+        return decodeBlobUrl(getBlobClient(container, objectKey).getBlobUrl());
     }
 
     @Override
@@ -161,7 +184,8 @@ public class AzureStorageService extends AbstractStorageService {
             if (props.getMetadata() != null) {
                 metadata.putAll(props.getMetadata());
             }
-            metadata.put("uri", blobClient.getBlobUrl());
+            String blobUrl = decodeBlobUrl(blobClient.getBlobUrl());
+            metadata.put("uri", blobUrl);
             metadata.put("Content-Type", props.getContentType());
             metadata.put("ETag", props.getETag());
 
@@ -170,7 +194,7 @@ public class AzureStorageService extends AbstractStorageService {
                     : null;
 
             return new BlobDetail(objectKey, props.getBlobSize(), lastModified,
-                    metadata, blobClient.getBlobUrl());
+                    metadata, blobUrl);
         } catch (Exception e) {
             throw new StorageServiceException(
                     "Failed to get object detail: " + objectKey + " - " + e.getMessage(), e);
@@ -231,14 +255,14 @@ public class AzureStorageService extends AbstractStorageService {
             BlobServiceSasSignatureValues values = new BlobServiceSasSignatureValues(
                     OffsetDateTime.now().plusSeconds(ttlSeconds), permission);
 
+            String baseUrl = decodeBlobUrl(blobClient.getBlobUrl());
             if (useSharedKey) {
-                return blobClient.getBlobUrl() + "?" + blobClient.generateSas(values);
+                return baseUrl + "?" + blobClient.generateSas(values);
             } else {
                 var delegationKey = blobServiceClient.getUserDelegationKey(
                         OffsetDateTime.now().minusMinutes(5),
                         OffsetDateTime.now().plusSeconds(ttlSeconds));
-                return blobClient.getBlobUrl() + "?" +
-                        blobClient.generateUserDelegationSas(values, delegationKey);
+                return baseUrl + "?" + blobClient.generateUserDelegationSas(values, delegationKey);
             }
         } catch (Exception e) {
             throw new StorageServiceException(
@@ -261,14 +285,14 @@ public class AzureStorageService extends AbstractStorageService {
                 values.setContentType(contentType);
             }
 
+            String baseUrl = decodeBlobUrl(blobClient.getBlobUrl());
             if (useSharedKey) {
-                return blobClient.getBlobUrl() + "?" + blobClient.generateSas(values);
+                return baseUrl + "?" + blobClient.generateSas(values);
             } else {
                 var delegationKey = blobServiceClient.getUserDelegationKey(
                         OffsetDateTime.now().minusMinutes(5),
                         OffsetDateTime.now().plusSeconds(ttlSeconds));
-                return blobClient.getBlobUrl() + "?" +
-                        blobClient.generateUserDelegationSas(values, delegationKey);
+                return baseUrl + "?" + blobClient.generateUserDelegationSas(values, delegationKey);
             }
         } catch (Exception e) {
             throw new StorageServiceException(
