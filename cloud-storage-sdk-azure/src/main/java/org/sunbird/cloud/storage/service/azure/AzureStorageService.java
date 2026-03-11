@@ -12,6 +12,8 @@ import com.azure.storage.blob.models.BlobItem;
 import com.azure.storage.blob.models.BlobListDetails;
 import com.azure.storage.blob.models.BlobProperties;
 import com.azure.storage.blob.models.ListBlobsOptions;
+import com.azure.storage.blob.options.BlobParallelUploadOptions;
+import com.azure.storage.blob.options.BlobUploadFromFileOptions;
 import com.azure.storage.blob.sas.BlobSasPermission;
 import com.azure.storage.blob.sas.BlobServiceSasSignatureValues;
 import com.azure.storage.common.StorageSharedKeyCredential;
@@ -130,7 +132,7 @@ public class AzureStorageService extends AbstractStorageService {
             BlobClient blobClient = getBlobClient(container, objectKey);
             String contentType = tika.detect(file);
             blobClient.uploadFromFileWithResponse(
-                    new com.azure.storage.blob.options.BlobUploadFromFileOptions(file.getAbsolutePath())
+                    new BlobUploadFromFileOptions(file.getAbsolutePath())
                             .setHeaders(new BlobHttpHeaders().setContentType(contentType)),
                     null, null);
             return decodeBlobUrl(blobClient.getBlobUrl());
@@ -146,8 +148,7 @@ public class AzureStorageService extends AbstractStorageService {
             BlobClient blobClient = getBlobClient(container, objectKey);
             String contentType = tika.detect(new ByteArrayInputStream(content), objectKey);
             blobClient.uploadWithResponse(
-                    new com.azure.storage.blob.options.BlobParallelUploadOptions(
-                            new ByteArrayInputStream(content), content.length)
+                    new BlobParallelUploadOptions(new ByteArrayInputStream(content), content.length)
                             .setHeaders(new BlobHttpHeaders().setContentType(contentType)),
                     null, null);
             return decodeBlobUrl(blobClient.getBlobUrl());
