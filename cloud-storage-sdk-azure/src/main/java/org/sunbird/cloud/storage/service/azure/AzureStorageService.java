@@ -129,9 +129,10 @@ public class AzureStorageService extends AbstractStorageService {
         try {
             BlobClient blobClient = getBlobClient(container, objectKey);
             String contentType = tika.detect(file);
-            blobClient.uploadFromFile(file.getAbsolutePath(), null,
-                    new BlobHttpHeaders().setContentType(contentType),
-                    null, null, null, null);
+            blobClient.uploadFromFileWithResponse(
+                    new com.azure.storage.blob.options.BlobUploadFromFileOptions(file.getAbsolutePath())
+                            .setHeaders(new BlobHttpHeaders().setContentType(contentType)),
+                    null, null);
             return decodeBlobUrl(blobClient.getBlobUrl());
         } catch (Exception e) {
             throw new StorageServiceException(
