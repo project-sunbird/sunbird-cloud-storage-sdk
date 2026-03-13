@@ -85,6 +85,11 @@ public final class FileUtil {
                 }
 
                 File newFile = new File(outputFolder + File.separator + entryName);
+                String canonicalDestDir = folder.getCanonicalPath();
+                String canonicalNewFile = newFile.getCanonicalPath();
+                if (!canonicalNewFile.startsWith(canonicalDestDir + File.separator)) {
+                    throw new IOException("Zip entry is outside of the target dir: " + entryName);
+                }
                 File parent = newFile.getParentFile();
                 if (parent != null && !parent.exists()) {
                     parent.mkdirs();

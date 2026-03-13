@@ -19,9 +19,9 @@ public final class Blob {
                 Map<String, Object> metadata, byte[] payload) {
         this.key = key;
         this.contentLength = contentLength;
-        this.lastModified = lastModified;
+        this.lastModified = lastModified != null ? new Date(lastModified.getTime()) : null;
         this.metadata = metadata != null ? Collections.unmodifiableMap(metadata) : Collections.emptyMap();
-        this.payload = payload;
+        this.payload = payload != null ? payload.clone() : null;
     }
 
     public Blob(String key, long contentLength, Date lastModified, Map<String, Object> metadata) {
@@ -37,7 +37,7 @@ public final class Blob {
     }
 
     public Date getLastModified() {
-        return lastModified;
+        return lastModified != null ? new Date(lastModified.getTime()) : null;
     }
 
     public Map<String, Object> getMetadata() {
@@ -45,7 +45,20 @@ public final class Blob {
     }
 
     public byte[] getPayload() {
-        return payload;
+        return payload != null ? payload.clone() : null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Blob blob = (Blob) o;
+        return java.util.Objects.equals(key, blob.key);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(key);
     }
 
     @Override

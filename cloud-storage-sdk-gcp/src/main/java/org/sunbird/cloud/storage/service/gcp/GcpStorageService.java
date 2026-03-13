@@ -36,6 +36,7 @@ public class GcpStorageService extends AbstractStorageService {
 
     private final StorageConfig config;
     private final Storage storage;
+    private Storage signingStorage;
 
     public GcpStorageService(StorageConfig config) {
         this.config = config;
@@ -52,6 +53,7 @@ public class GcpStorageService extends AbstractStorageService {
                     // For access key auth, storageKey is the project ID and storageSecret
                     // is a service account JSON key. Parse as JSON credentials.
                     if (config.getStorageSecret() != null && !config.getStorageSecret().isEmpty()) {
+                        logger.warn("Using service account JSON from config. For production, prefer GOOGLE_APPLICATION_CREDENTIALS env var.");
                         GoogleCredentials credentials = GoogleCredentials.fromStream(
                                 new ByteArrayInputStream(config.getStorageSecret().getBytes()));
                         builder.setCredentials(credentials);
@@ -99,7 +101,16 @@ public class GcpStorageService extends AbstractStorageService {
             BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
                     .setContentType(contentType)
                     .build();
-            storage.create(blobInfo, Files.readAllBytes(file.toPath()));
+            try (java.nio.channels.WritableByteChannel writer = storage.writer(blobInfo);
+                 java.io.FileInputStream fis = new java.io.FileInputStream(file);
+                 java.nio.channels.ReadableByteChannel reader = java.nio.channels.Channels.newChannel(fis)) {
+                java.nio.ByteBuffer buffer = java.nio.ByteBuffer.allocate(64 * 1024);
+                while (reader.read(buffer) > 0) {
+                    buffer.flip();
+                    writer.write(buffer);
+                    buffer.clear();
+                }
+            }
             return GCS_HOST + container + "/" + objectKey;
         } catch (IOException e) {
             throw new StorageServiceException(
@@ -118,8 +129,8 @@ public class GcpStorageService extends AbstractStorageService {
     @Override
     protected InputStream getObjectStream(String container, String objectKey) {
         try {
-            byte[] content = storage.readAllBytes(BlobId.of(container, objectKey));
-            return new ByteArrayInputStream(content);
+            com.google.cloud.ReadChannel reader = storage.reader(BlobId.of(container, objectKey));
+            return java.nio.channels.Channels.newInputStream(reader);
         } catch (Exception e) {
             throw new StorageServiceException(
                     "Failed to get object stream: " + objectKey + " - " + e.getMessage(), e);
@@ -270,30 +281,34 @@ public class GcpStorageService extends AbstractStorageService {
      */
     private Storage resolveSigningStorage(Map<String, String> additionalParams) {
         if (additionalParams == null || additionalParams.isEmpty()) {
-            return storage;
+            return this.storage;
         }
         String clientId = additionalParams.get("clientId");
         String clientEmail = additionalParams.get("clientEmail");
         String privateKeyPkcs8 = additionalParams.get("privateKeyPkcs8");
-        String privateKeyId = additionalParams.get("privateKeyIds");
+        String privateKeyId = additionalParams.get("privateKeyId");
         String projectId = additionalParams.get("projectId");
 
         if (clientEmail != null && privateKeyPkcs8 != null && privateKeyId != null) {
+            if (this.signingStorage != null) {
+                return this.signingStorage;
+            }
             try {
                 ServiceAccountCredentials credentials = ServiceAccountCredentials.fromPkcs8(
                         clientId, clientEmail, privateKeyPkcs8, privateKeyId,
                         new ArrayList<>());
-                return StorageOptions.newBuilder()
+                this.signingStorage = StorageOptions.newBuilder()
                         .setProjectId(projectId)
                         .setCredentials(credentials)
                         .build()
                         .getService();
+                return this.signingStorage;
             } catch (IOException e) {
                 throw new StorageServiceException(
                         "Failed to create signing credentials from additionalParams: " + e.getMessage(), e);
             }
         }
-        return storage;
+        return this.storage;
     }
 
     @Override

@@ -30,6 +30,19 @@ public final class DeleteTarget {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DeleteTarget that = (DeleteTarget) o;
+        return directory == that.directory && java.util.Objects.equals(objectKey, that.objectKey);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(objectKey, directory);
+    }
+
+    @Override
     public String toString() {
         return "DeleteTarget{key='" + objectKey + "', directory=" + directory + "}";
     }
