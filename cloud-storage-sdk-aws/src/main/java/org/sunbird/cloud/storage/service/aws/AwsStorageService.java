@@ -102,6 +102,7 @@ public class AwsStorageService extends AbstractStorageService {
                     .pathStyleAccessEnabled(true)
                     .build();
             clientBuilder.serviceConfiguration(s3Config);
+            presignerBuilder.serviceConfiguration(s3Config);
         }
 
         this.s3Client = clientBuilder.build();
@@ -167,7 +168,7 @@ public class AwsStorageService extends AbstractStorageService {
             PutObjectRequest request = PutObjectRequest.builder()
                     .bucket(container)
                     .key(objectKey)
-                    .contentType("application/octet-stream")
+                    .contentType(tika.detect(new java.io.ByteArrayInputStream(content), objectKey))
                     .build();
             s3Client.putObject(request, RequestBody.fromBytes(content));
             return getObjectUri(container, objectKey);

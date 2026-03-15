@@ -229,23 +229,25 @@ public abstract class AbstractStorageService implements IStorageService {
             if (isDirectory) {
                 List<String> objects = listObjectKeys(container, objectKey);
                 for (String obj : objects) {
-                    InputStream stream = getObjectStream(container, obj);
-                    String relativePath = obj.startsWith(objectKey) ? obj.substring(objectKey.length()) : obj;
-                    File targetFile = new File(localPath, relativePath);
-                    File parentDir = targetFile.getParentFile();
-                    if (parentDir != null && !parentDir.exists()) {
-                        parentDir.mkdirs();
+                    try (InputStream stream = getObjectStream(container, obj)) {
+                        String relativePath = obj.startsWith(objectKey) ? obj.substring(objectKey.length()) : obj;
+                        File targetFile = new File(localPath, relativePath);
+                        File parentDir = targetFile.getParentFile();
+                        if (parentDir != null && !parentDir.exists()) {
+                            parentDir.mkdirs();
+                        }
+                        String fileName = targetFile.getName();
+                        String dirPath = parentDir != null ? parentDir.getAbsolutePath() + "/" : localPath;
+                        FileUtil.copyStream(stream, dirPath, fileName);
                     }
-                    String fileName = targetFile.getName();
-                    String dirPath = parentDir != null ? parentDir.getAbsolutePath() + "/" : localPath;
-                    FileUtil.copyStream(stream, dirPath, fileName);
                 }
             } else {
-                InputStream stream = getObjectStream(container, objectKey);
-                String fileName = objectKey.contains("/")
-                        ? objectKey.substring(objectKey.lastIndexOf('/') + 1)
-                        : objectKey;
-                FileUtil.copyStream(stream, localPath, fileName);
+                try (InputStream stream = getObjectStream(container, objectKey)) {
+                    String fileName = objectKey.contains("/")
+                            ? objectKey.substring(objectKey.lastIndexOf('/') + 1)
+                            : objectKey;
+                    FileUtil.copyStream(stream, localPath, fileName);
+                }
             }
         } catch (StorageServiceException e) {
             throw e;
@@ -285,6 +287,11 @@ public abstract class AbstractStorageService implements IStorageService {
             BlobDetail detail = getObjectDetail(container, objectKey);
             byte[] payload = null;
             if (withPayload) {
+                if (detail.contentLength > 100 * 1024 * 1024) { // 100MB limit
+                    throw new StorageServiceException(
+                        "Object too large for in-memory payload (" + detail.contentLength + " bytes). " +
+                        "Use getObjectStream() for large objects.");
+                }
                 try (InputStream is = getObjectStream(container, objectKey)) {
                     payload = is.readAllBytes();
                 }
@@ -379,9 +386,9 @@ public abstract class AbstractStorageService implements IStorageService {
 
     @Override
     public void extractArchive(String container, String objectKey, String toKey) {
+        String localExtractPath = System.getProperty("local_extract_path",
+                System.getenv().getOrDefault("local_extract_path", "/tmp/extract"));
         try {
-            String localExtractPath = System.getProperty("local_extract_path",
-                    System.getenv().getOrDefault("local_extract_path", "/tmp/extract"));
             download(container, objectKey, localExtractPath, false);
             String archiveName = objectKey.contains("/")
                     ? objectKey.substring(objectKey.lastIndexOf('/') + 1)
@@ -396,6 +403,15 @@ public abstract class AbstractStorageService implements IStorageService {
             throw e;
         } catch (Exception e) {
             throw new StorageServiceException("Extract archive failed: " + e.getMessage(), e);
+        } finally {
+            try {
+                java.nio.file.Files.walk(java.nio.file.Paths.get(localExtractPath))
+                    .sorted(java.util.Comparator.reverseOrder())
+                    .map(java.nio.file.Path::toFile)
+                    .forEach(File::delete);
+            } catch (IOException cleanupEx) {
+                logger.warn("Failed to clean up extraction directory: {}", localExtractPath, cleanupEx);
+            }
         }
     }
 

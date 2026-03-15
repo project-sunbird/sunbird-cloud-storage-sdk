@@ -239,7 +239,7 @@ public class AzureStorageService extends AbstractStorageService {
         try {
             BlobClient sourceBlobClient = getBlobClient(fromContainer, fromKey);
             BlobClient destBlobClient = getBlobClient(toContainer, toKey);
-            destBlobClient.copyFromUrl(sourceBlobClient.getBlobUrl());
+            destBlobClient.copyFromUrl(decodeBlobUrl(sourceBlobClient.getBlobUrl()));
         } catch (Exception e) {
             throw new StorageServiceException(
                     "Failed to copy object from " + fromContainer + "/" + fromKey
@@ -307,7 +307,8 @@ public class AzureStorageService extends AbstractStorageService {
 
     @Override
     public void close() {
-        // BlobServiceClient does not implement Closeable; no resource cleanup needed
+        // BlobServiceClient manages its own HTTP connection pool internally
+        // and does not implement Closeable. No explicit cleanup is needed.
         logger.info("AzureStorageService closed");
     }
 }

@@ -20,8 +20,8 @@ import org.sunbird.cloud.storage.exception.StorageServiceException;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -54,12 +54,17 @@ public class OciStorageService extends AbstractStorageService {
             clientBuilder.region(Region.fromRegionId(config.getRegion()));
         }
 
-        this.objectStorageClient = clientBuilder.build(authProvider);
-
-        // Retrieve namespace
-        GetNamespaceResponse namespaceResponse = objectStorageClient.getNamespace(
-                GetNamespaceRequest.builder().build());
-        this.namespace = namespaceResponse.getValue();
+        ObjectStorageClient tempClient = clientBuilder.build(authProvider);
+        try {
+            GetNamespaceResponse namespaceResponse = tempClient.getNamespace(
+                    GetNamespaceRequest.builder().build());
+            this.namespace = namespaceResponse.getValue();
+            this.objectStorageClient = tempClient;
+        } catch (Exception e) {
+            tempClient.close();
+            throw new StorageServiceException(
+                    "Failed to initialize OCI storage - could not get namespace: " + e.getMessage(), e);
+        }
 
         logger.info("Initialized OciStorageService, namespace={}, authType={}",
                 namespace, config.getAuthType());
@@ -126,18 +131,19 @@ public class OciStorageService extends AbstractStorageService {
 
     @Override
     protected String putObject(String container, String objectKey, File file) {
-        try (FileInputStream fis = new FileInputStream(file)) {
+        try {
             String contentType = tika.detect(file);
-            String md5 = computeMd5Base64(file);
+            byte[] data = Files.readAllBytes(file.toPath());
+            String md5 = computeMd5Base64(data);
 
             PutObjectRequest request = PutObjectRequest.builder()
                     .namespaceName(namespace)
                     .bucketName(container)
                     .objectName(objectKey)
                     .contentType(contentType)
-                    .contentLength(file.length())
+                    .contentLength((long) data.length)
                     .contentMD5(md5)
-                    .putObjectBody(fis)
+                    .putObjectBody(new ByteArrayInputStream(data))
                     .build();
             objectStorageClient.putObject(request);
             return buildObjectUri(container, objectKey);
@@ -305,7 +311,7 @@ public class OciStorageService extends AbstractStorageService {
                                                     int ttlSeconds,
                                                     CreatePreauthenticatedRequestDetails.AccessType accessType) {
         try {
-            Date expiry = new Date(System.currentTimeMillis() + (long) ttlSeconds * 1000);
+            Date expiry = Date.from(java.time.Instant.now().plusSeconds(ttlSeconds));
 
             CreatePreauthenticatedRequestDetails details = CreatePreauthenticatedRequestDetails.builder()
                     .name("par-" + objectKey + "-" + System.currentTimeMillis())
@@ -356,22 +362,6 @@ public class OciStorageService extends AbstractStorageService {
         String region = config.getRegion() != null ? config.getRegion() : "us-ashburn-1";
         return "https://objectstorage." + region + ".oraclecloud.com/n/" +
                 namespace + "/b/" + container + "/o/" + objectKey;
-    }
-
-    private String computeMd5Base64(File file) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            try (FileInputStream fis = new FileInputStream(file)) {
-                byte[] buffer = new byte[8192];
-                int read;
-                while ((read = fis.read(buffer)) != -1) {
-                    md.update(buffer, 0, read);
-                }
-            }
-            return Base64.getEncoder().encodeToString(md.digest());
-        } catch (Exception e) {
-            throw new StorageServiceException("Failed to compute MD5: " + e.getMessage(), e);
-        }
     }
 
     private String computeMd5Base64(byte[] content) {
