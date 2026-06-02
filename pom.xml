@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.sunbird</groupId>
     <artifactId>cloud-storage-sdk-parent</artifactId>
-    <version>2.0.1</version>
+    <version>2.0.2-beta</version>
     <packaging>pom</packaging>
     <name>Cloud Storage SDK Parent</name>
     <description>Multi-module cloud storage SDK providing CSP-specific implementations using official cloud SDKs.</description>
@@ -20,6 +20,7 @@
         <aws.sdk.version>2.25.0</aws.sdk.version>
         <azure.storage.blob.version>12.25.0</azure.storage.blob.version>
         <azure.identity.version>1.11.0</azure.identity.version>
+        <azure.core.http.okhttp.version>1.11.20</azure.core.http.okhttp.version>
         <gcp.storage.version>2.30.0</gcp.storage.version>
         <oci.sdk.version>3.30.0</oci.sdk.version>
         <tika.version>2.9.0</tika.version>
@@ -125,6 +126,11 @@
                 <groupId>com.azure</groupId>
                 <artifactId>azure-identity</artifactId>
                 <version>${azure.identity.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.azure</groupId>
+                <artifactId>azure-core-http-okhttp</artifactId>
+                <version>${azure.core.http.okhttp.version}</version>
             </dependency>
 
             <!-- GCP -->
