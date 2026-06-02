@@ -50,7 +50,14 @@ public class AzureStorageService extends AbstractStorageService {
         String accountName = config.getStorageKey();
         String endpoint = "https://" + accountName + ".blob.core.windows.net";
 
-        BlobServiceClientBuilder builder = new BlobServiceClientBuilder().endpoint(endpoint);
+        // Use OkHttp transport instead of default reactor-netty.
+        // Reason: reactor-netty's HttpUtil.validateRequestLineTokens rejects '%2F' in
+        // DefaultFullHttpRequest. Azure SDK percent-encodes '/' in blob names as '%2F'
+        // in the request line, which breaks single-shot REST ops (e.g. copyFromUrl) on
+        // nested blob paths. OkHttp transport does not enforce that validation.
+        BlobServiceClientBuilder builder = new BlobServiceClientBuilder()
+                .endpoint(endpoint)
+                .httpClient(new com.azure.core.http.okhttp.OkHttpAsyncHttpClientBuilder().build());
 
         switch (config.getAuthType()) {
             case ACCESS_KEY:
