@@ -20,7 +20,7 @@
         <aws.sdk.version>2.25.0</aws.sdk.version>
         <azure.storage.blob.version>12.25.0</azure.storage.blob.version>
         <azure.identity.version>1.11.0</azure.identity.version>
-        <azure.core.http.okhttp.version>1.11.20</azure.core.http.okhttp.version>
+        <azure.core.http.okhttp.version>1.11.0</azure.core.http.okhttp.version>
         <gcp.storage.version>2.30.0</gcp.storage.version>
         <oci.sdk.version>3.30.0</oci.sdk.version>
         <tika.version>2.9.0</tika.version>
