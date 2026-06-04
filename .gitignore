@@ -1,4 +1,5 @@
 /target/
+**/target/
 .classpath
 .project
 .settings
@@ -7,3 +8,4 @@ src/test/resources/test*
 .cache*
 .DS_Store
 *.iml
+.flattened-pom.xml
