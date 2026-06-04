@@ -17,6 +17,7 @@ import com.azure.storage.blob.options.BlobUploadFromFileOptions;
 import com.azure.storage.blob.sas.BlobSasPermission;
 import com.azure.storage.blob.sas.BlobServiceSasSignatureValues;
 import com.azure.storage.common.StorageSharedKeyCredential;
+import com.azure.core.http.okhttp.OkHttpAsyncHttpClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sunbird.cloud.storage.AbstractStorageService;
@@ -50,7 +51,10 @@ public class AzureStorageService extends AbstractStorageService {
         String accountName = config.getStorageKey();
         String endpoint = "https://" + accountName + ".blob.core.windows.net";
 
-        BlobServiceClientBuilder builder = new BlobServiceClientBuilder().endpoint(endpoint);
+        // OkHttp avoids Netty's request-line bitmask bug that rejects uppercase chars in percent-encoded blob names.
+        BlobServiceClientBuilder builder = new BlobServiceClientBuilder()
+                .endpoint(endpoint)
+                .httpClient(new OkHttpAsyncHttpClientBuilder().build());
 
         switch (config.getAuthType()) {
             case ACCESS_KEY:
