@@ -17,6 +17,7 @@ import com.azure.storage.blob.options.BlobUploadFromFileOptions;
 import com.azure.storage.blob.sas.BlobSasPermission;
 import com.azure.storage.blob.sas.BlobServiceSasSignatureValues;
 import com.azure.storage.common.StorageSharedKeyCredential;
+import com.azure.core.http.okhttp.OkHttpAsyncHttpClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sunbird.cloud.storage.AbstractStorageService;
@@ -50,14 +51,10 @@ public class AzureStorageService extends AbstractStorageService {
         String accountName = config.getStorageKey();
         String endpoint = "https://" + accountName + ".blob.core.windows.net";
 
-        // Use OkHttp transport instead of default reactor-netty.
-        // Reason: reactor-netty's HttpUtil.validateRequestLineTokens rejects '%2F' in
-        // DefaultFullHttpRequest. Azure SDK percent-encodes '/' in blob names as '%2F'
-        // in the request line, which breaks single-shot REST ops (e.g. copyFromUrl) on
-        // nested blob paths. OkHttp transport does not enforce that validation.
+        // OkHttp avoids Netty's request-line bitmask bug that rejects uppercase chars in percent-encoded blob names.
         BlobServiceClientBuilder builder = new BlobServiceClientBuilder()
                 .endpoint(endpoint)
-                .httpClient(new com.azure.core.http.okhttp.OkHttpAsyncHttpClientBuilder().build());
+                .httpClient(new OkHttpAsyncHttpClientBuilder().build());
 
         switch (config.getAuthType()) {
             case ACCESS_KEY:
